@@ -1,0 +1,23 @@
+<component name="ArtifactManager">
+  <artifact type="javafx" name="GuyGame">
+    <output-path>$PROJECT_DIR$/out/artifacts/GuyGame</output-path>
+    <properties id="javafx-properties">
+      <options>
+        <option name="appClass" value="" />
+        <option name="description" value="" />
+        <option name="htmlParamFile" value="" />
+        <option name="paramFile" value="" />
+        <option name="title" value="I Wanna Do the Thing" />
+        <option name="vendor" value="" />
+      </options>
+    </properties>
+    <root id="root">
+      <element id="archive" name="GuyGame.jar">
+        <element id="module-output" name="GuyGame" />
+        <element id="file-copy" path="$PROJECT_DIR$/lib/commons-io-2.4.jar" />
+        <element id="library" level="project" name="jogl" />
+        <element id="file-copy" path="$PROJECT_DIR$/lib/org.json-20120521.jar" />
+      </element>
+    </root>
+  </artifact>
+</component>

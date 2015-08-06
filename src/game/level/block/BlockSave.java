@@ -8,6 +8,8 @@ import game.graphics.light.RadialLight;
 import game.graphics.Sprite;
 import game.level.Level;
 import game.math.Vec2d;
+import game.sound.Sounds;
+import kuusisto.tinysound.Sound;
 
 public class BlockSave extends Block {
 
@@ -21,17 +23,23 @@ public class BlockSave extends Block {
     private boolean lightActive = false;
     private long saveTime;
 
+    private Sound sound;
+
     private BlockSave(Builder builder) {
         super(builder);
         normalSprite = builder.normalSprite;
         savedSprite = builder.savedSprite;
         lightIntensity = builder.lightIntensity;
         lightColor = builder.lightColor;
+        sound = builder.sound;
+        if(sound == null)
+            sound = Sounds.save;
     }
 
     protected void onCollide(Entity entity) {
         if(entity instanceof Player && Game.game.input.saveDown && !Game.game.input.saveWasDown) {
             save();
+            sound.play(0.075);
         }
     }
 
@@ -69,9 +77,11 @@ public class BlockSave extends Block {
     }
 
     public static class Builder extends Block.Builder {
+
         protected Sprite normalSprite, savedSprite;
         protected float lightIntensity;
         protected Color4f lightColor;
+        protected Sound sound;
 
         public Builder() {
             solid = false;
@@ -93,6 +103,11 @@ public class BlockSave extends Block {
 
         public Builder lightIntensity(float lightIntensity) {
             this.lightIntensity = lightIntensity;
+            return this;
+        }
+
+        public Builder sound(Sound sound) {
+            this.sound = sound;
             return this;
         }
 

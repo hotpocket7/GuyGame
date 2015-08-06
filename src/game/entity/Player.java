@@ -2,14 +2,13 @@ package game.entity;
 
 import com.jogamp.opengl.GL2;
 import game.Game;
-import game.collision.PolygonHitbox;
-import game.collision.RectangularHitbox;
+import game.collision.CollisionHandler;
 import game.graphics.Animation;
 import game.graphics.Shader;
 import game.level.Level;
 import game.level.block.Block;
+import game.sound.Sounds;
 
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
 public class Player extends Entity {
@@ -23,6 +22,7 @@ public class Player extends Entity {
     }
 
     public State state = State.AIRBORNE;
+    public State previousState = State.AIRBORNE;
 
     private double walkSpeed = 3;
     private double gravity = 0.4d;
@@ -38,7 +38,6 @@ public class Player extends Entity {
     private long deathTime; // Time of death, used in death shader
 
     protected Player(Builder builder) {
-        //size = 12,19
         super(builder);
         setAnimation(Animation.playerIdle);
     }
@@ -61,16 +60,16 @@ public class Player extends Entity {
         if (Game.game.input.rightDown) {
             position.x += walkSpeed;
             spriteDirection = SpriteDirection.RIGHT;
+            velocity.x = 0;
         } else if (Game.game.input.leftDown) {
             position.x -= walkSpeed;
             spriteDirection = SpriteDirection.LEFT;
+            velocity.x = 0;
         }
 
         handleJumping();
 
-        updateBounds();
         handleBlockCollisions('x');
-        updateBounds();
         if(!active) return;
 
         if (state == State.AIRBORNE) {
@@ -79,9 +78,7 @@ public class Player extends Entity {
             position.y += velocity.y;
         }
 
-        updateBounds();
         handleBlockCollisions('y');
-        updateBounds();
         if(!active) return;
 
         handleEntityCollisions();
@@ -89,140 +86,78 @@ public class Player extends Entity {
 
         sprite = animation.nextSprite();
         updateSprite();
+        previousState = state;
     }
 
     private void handleJumping() {
+        System.out.println("Jumps used: " + jumpsUsed + "/" + maxJumps);
+
         if (Game.game.input.jumpDown && !Game.game.input.jumpWasDown && jumpsUsed < maxJumps) {
-            velocity.y = state == State.GROUNDED ? jumpVelocity : doubleJumpVelocity;
+            if(state == State.GROUNDED) {
+                Sounds.playerJump.play();
+                velocity.y = jumpVelocity;
+            } else if(state == State.AIRBORNE) {
+                Sounds.playerDoubleJump.play();
+                velocity.y = doubleJumpVelocity;
+            }
             jumpsUsed++;
             state = State.AIRBORNE;
         }
 
         if (state == State.AIRBORNE) {
-            if (!Game.game.input.jumpDown) {
-                if(Game.game.input.jumpWasDown && velocity.y < 0) {
-                    velocity.y *= 0.45;
-                }
+            if (!Game.game.input.jumpDown && Game.game.input.jumpWasDown && velocity.y < 0) {
+                velocity.y *= 0.45;
             }
-        } else {
+        } else if(state == State.GROUNDED) {
             jumpsUsed = 0;
         }
     }
 
-    private void updateBounds() {
-        hitbox.position.setEqual(position);
-        hitbox.updateBounds();
-    }
-
-    //TODO: Rewrite & abstract this collision handling, make Player just another entity in level.entities, do the same with blocks
     private void handleBlockCollisions(char axis) {
-        if (axis != 'x' && axis != 'y') {
-            System.err.println("Invalid axis!");
-            return;
-        }
+        updateBounds();
+        state = State.AIRBORNE;
 
-
-        boolean onGround = false;
         ArrayList<Block> specialBlocks = new ArrayList<>();
 
-        for (Block block : Level.getCurrentLevel().blocks) {
-            if(!block.active || !block.isCollidable()) continue;
-
-
-            RectangularHitbox blockHitbox = block.getHitbox();
-            PolygonHitbox blockHitbox2 = block.getPolygonHitbox();
-
-            if (!hitbox.collides(block.getHitbox())) {
-                if(block.isCollidable() && !block.hasSpecialHitbox() && block.solidTop && axis == 'y') {
-                    if(block.getHitbox().bounds.contains(position.x, position.y + height + 1)
-                            || block.getHitbox().bounds.contains(position.x + width, position.y + height + 1)) {
-                        onGround = true;
-                        position.plusEquals(block.velocity);
-                    }
-                    if(block.getHitbox().bounds.contains(position.x, position.y + height + 1)
-                            && block.getHitbox().bounds.contains(position.x + width, position.y + height + 1)) {
-                        block.collide(this);
-                    }
-                }
+        for(Block block : Level.getCurrentLevel().blocks) {
+            if(!block.isOnScreen())
                 continue;
-            }
-
-            if (!block.solid) {
-                block.collide(this);
-            }
-
-            Rectangle2D intersection = hitbox.bounds.createIntersection(blockHitbox.bounds);
-            double w = intersection.getWidth();
-            double h = intersection.getHeight();
-            if(block.solid) {
-                switch (axis) {
-                    case 'x':
-                        if(block.hasSpecialHitbox()) {
-                            specialBlocks.add(block);
-                            break;
-                        }
-                        if (w >= h || block.position.y > position.y - velocity.y + height)
-                            break; //No horizontal collision
-                        if (position.x < blockHitbox.position.x && block.solidLeft) {
-                            //Collision to right of player
-                            position.x = blockHitbox.position.x - width;
-                        } else if (position.x > blockHitbox.position.x && block.solidRight) {
-                            //Collision to left of player
-                            position.x = blockHitbox.position.x + blockHitbox.width;
-                        }
-                        block.collide(this);
-                        break;
-                    case 'y':
-                        if (position.y > blockHitbox.position.y && block.solidBottom) {
-                            //Collision above player
-                            if(block.hasSpecialHitbox()) {
-                                specialBlocks.add(block);
-                                break;
-                            }
-                            position.y = blockHitbox.position.y + blockHitbox.height;
-                            velocity.y = 0;
-                            block.collide(this);
-                        } else if (position.y <= blockHitbox.position.y && block.solidTop) {
-                            //Collision below player
-                            if(!block.solidBottom
-                                    && position.y + height - velocity.y - acceleration.y >
-                                    blockHitbox.position.y - block.velocity.y)
-                                break;
-                            if (block.hasSpecialHitbox()) {
-                                specialBlocks.add(block);
-                                break;
-                            }
-                            position.y = blockHitbox.position.y - height;
-                            velocity.y = 0;
-                            state = State.GROUNDED;
-                            onGround = true;
-                            block.collide(this);
-                        }
-                        break;
+            if(collides(block)) {
+                if(block.isSpecial()) {
+                    specialBlocks.add(block);
+                    continue;
                 }
-            }
-        }
-        updateBounds();
-        if(axis == 'y') {
-            if (!onGround) {
-                if (state == State.GROUNDED)
-                    jumpsUsed++;
-                state = State.AIRBORNE;
-            }
-            for(Block block : specialBlocks) {
-                if (hitbox.collides(block.getPolygonHitbox())) {
+
+                if(block.isCollidable())
                     block.collide(this);
-                }
+                if(axis == 'x')
+                    CollisionHandler.resolveCollisionX(this, block);
+                if(axis == 'y')
+                    CollisionHandler.resolveCollisionY(this, block);
             }
-            specialBlocks.clear();
         }
-    }
-    private void handleEntityCollisions() {
-        Level.getCurrentLevel().entities.stream().filter((e) -> e.isCollidable() && e.active).forEach((entity) -> {
-            if (collides(entity)) {
-                entity.collide(this);
+
+        for(Block block : Level.getCurrentLevel().blocks) {
+            if(!collides(block))
+                continue;
+            if(block.isCollidable())
+                block.collide(this);
+            if(axis == 'x')
+                CollisionHandler.resolveCollisionX(this, block);
+            if(axis == 'y')
+                CollisionHandler.resolveCollisionY(this, block);
+        }
+
+        if(axis == 'y')
+            if(state == State.AIRBORNE && previousState == State.GROUNDED && !Game.game.input.jumpDown) {
+                jumpsUsed++;
+            } else if(state == State.GROUNDED) {
+                jumpsUsed = 0;
             }
-        });
+    }
+
+    private void handleEntityCollisions() {
+        pollCollisions(Level.getCurrentLevel().entities);
     }
 
     public void render(GL2 gl) {
@@ -233,7 +168,9 @@ public class Player extends Entity {
                     (float) ((deathTime - System.currentTimeMillis()) % 100000));
         }
         super.render(flipHorizontal, false, gl);
-        if(state == State.DYING) Shader.deathShader.disable(gl);
+        if(state == State.DYING) {
+            Shader.deathShader.disable(gl);
+        }
     }
 
     public void updateSprite() {

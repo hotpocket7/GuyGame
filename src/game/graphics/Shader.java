@@ -16,9 +16,11 @@ public class Shader
     private static ArrayList<Shader> shaders = new ArrayList<>();
     public static Shader deathShader; // Makes the kid pulse red
     public static Shader lightShader; // Light attenuation
+    public static Shader floatShader; // Bob up and down slowly
     static {
         deathShader = new Shader("/shaders/death.vert", "/shaders/death.frag");
         lightShader = new Shader("/shaders/light.vert", "/shaders/light.frag");
+        floatShader = new Shader("/shaders/float.vert", "/shaders/default.frag");
     }
 
     public static void loadShaders(GL2 gl) {

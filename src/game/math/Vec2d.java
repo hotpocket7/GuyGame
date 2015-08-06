@@ -10,6 +10,11 @@ public class Vec2d {
     public double x, y;
     public Vec2d angleComparatorInitialVertex;
 
+    public Vec2d(Vec2d vec) {
+        x = vec.x;
+        y = vec.y;
+    }
+
     public Vec2d(double x, double y) {
         this.x = x;
         this.y = y;

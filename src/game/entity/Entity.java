@@ -37,6 +37,8 @@ public abstract class Entity {
     private boolean initiallyActive = true;
     private Vec2d initialPosition, initialVelocity;
 
+    public boolean renderInFront = false;
+
     private ArrayList<EntityEvent> updateEvents = new ArrayList<>();
     private ArrayList<CollisionEvent> collisionEvents = new ArrayList<>();
     private ArrayList<TimedEntityEvent> timedEvents = new ArrayList<>();
@@ -92,7 +94,7 @@ public abstract class Entity {
     public void render(boolean flipHorizontal, boolean flipVertical, GL2 gl) {
         updateSprite();
         if(sprite == null) {
-            System.out.println(position.toString());
+            System.out.println("Null sprite at position " + position.toString());
             return;
         }
         sprite.render(position, flipHorizontal, flipVertical, gl);
@@ -166,8 +168,18 @@ public abstract class Entity {
      * Checks for collisions between entities in a list.
      * @param entities List of entities to be checked for collisions
      */
-    public void pollCollisions(ArrayList<? extends Entity> entities){
-        entities.stream().filter(e -> e != this && e.isOnScreen() && e.isCollidable() && collides(e)).forEach(entity ->{
+    public void pollCollisions(ArrayList<? extends Entity> entities) {
+//      for(Entity entity : entities) {
+//          if(entity.isCollidable() && entity.active && entity != this && entity.isOnScreen())
+//          if(collides(entity)) {
+//              entity.collide(this);
+//              if(!entity.isCollider())
+//                  collide(entity);
+//          }
+//      }
+        entities.stream().filter(e -> e.active && e != this && e.isOnScreen() && e.isCollidable() && collides(e))
+                .forEach(entity
+                ->{
             entity.collide(this);
             if(!entity.isCollider()) collide(entity);
         });
@@ -190,6 +202,14 @@ public abstract class Entity {
 
     public void setPosition(Vec2d position) {
         setPosition(position.x, position.y);
+    }
+
+    public void updateBounds() {
+        Vec2d delta = position.subtract(hitbox.position);
+        hitbox.position.setEqual(position);
+        hitbox.updateBounds();
+        if(polygonHitbox != null)
+            polygonHitbox.updateBounds(delta);
     }
 
     public void addToPosition(Vec2d delta) {
@@ -238,8 +258,8 @@ public abstract class Entity {
 
     public boolean isOnScreen() {
         Vec2d camera = Game.scene.getCamera();
-        int w = Game.scene.getWidth();
-        int h = Game.scene.getHeight();
+        int w = Game.WIDTH;
+        int h = Game.HEIGHT;
         return position.x + width > camera.x && position.y + height > camera.y
                 && position.x < camera.x + w && position.y < camera.y + h;
     }

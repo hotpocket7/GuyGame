@@ -63,6 +63,7 @@ public class Game implements Runnable {
         game = new Game();
         game.frame.setTitle(title);
         game.frame.setSize(WIDTH, HEIGHT);
+        game.frame.setResizable(false);
         game.frame.add(scene);
         game.frame.setResizable(false);
         game.frame.pack();

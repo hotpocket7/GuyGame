@@ -70,7 +70,7 @@ public class SpriteSheet {
         float x = (float) position.x;
         float y = (float) position.y;
 
-        y = Game.scene.getHeight() - y - spriteHeight; //Origin in-game is top-left rather than bottom-left
+        y = Game.HEIGHT - y - spriteHeight; //Origin in-game is top-left rather than bottom-left
         float xx = (index % numSpritesX) * (float) spriteWidth / width;
         float yy = (float) Math.floor(index / numSpritesX) * (float) spriteHeight / height;
 
@@ -123,13 +123,14 @@ public class SpriteSheet {
 
     private void load() {
         try {
-            image = new File("asdf"); //Need something to copy the image to
+            image = new File("aksdfjadlsfjasdhfjklasdhk"); //Need something to copy the image to
             InputStream is = SpriteSheet.class.getResourceAsStream(path);
             FileUtils.copyInputStreamToFile(is, image);
             texture = TextureIO.newTexture(image, true);
             BufferedImage bi = ImageIO.read(image);
             width = bi.getWidth();
             height = bi.getHeight();
+            image.delete();
         } catch (IOException e) {
             e.printStackTrace();
         }

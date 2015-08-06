@@ -2,6 +2,7 @@ package game.level;
 
 import game.entity.Entity;
 import game.entity.JumpPickup;
+import game.entity.Portal;
 import game.event.EntityBounceEvent;
 import game.event.Events;
 import game.event.TimedEntityEvent;
@@ -100,7 +101,8 @@ public class LevelLoader {
                     //Castle tileset
                     switch (id) {
                         case 1:
-                            builder = new BlockGeneric.Builder().position(position).sprite(sprite).collidable(true)
+                            builder = new BlockGeneric.Builder().special(true).position(position).sprite(sprite)
+                                    .collidable(true)
                                     .addCollisionEvent(Events.killPlayerOnTouch);
                             break;
                         case 2:
@@ -134,7 +136,7 @@ public class LevelLoader {
                                     new Color4f(242 / 255f, 90 / 255f, 7 / 255f, 0.6f), level.ambientColor));
                             break;
                         case 12:
-                            builder = new BlockGeneric.Builder()
+                            builder = new BlockGeneric.Builder().special(true)
                                     .solidTop(true).solidBottom(false).solidLeft(false).solidRight(false)
                                     .collidable(true).size(32, 16).position(position).sprite(sprite);
                             break;
@@ -142,6 +144,23 @@ public class LevelLoader {
                         case 24:
                         case 32:
                             builder = new BlockGeneric.Builder().solid(false).position(position).sprite(sprite);
+                            break;
+                        case 48:
+                            int destination = properties.getInt("destination");
+                            System.out.println(destination);
+                            String destPortal = properties.getString("destPortal");
+                            int width = properties.getInt("portalWidth"), height = properties.getInt("portalHeight");
+                            double maxAlpha = properties.getDouble("maxAlpha");
+
+                            Portal.Direction direction = Portal.Direction.valueOf(
+                                    properties.getString("direction").toUpperCase()
+                            );
+
+                            builder = new Portal.Builder()
+                                    .direction(direction).destination(destination).destPortal(destPortal)
+                                    .maxAlpha((float) maxAlpha)
+                                    .sprite(null).collidable(true)
+                                    .size(width, height).position(position);
                             break;
                         default:
                             builder = new BlockGeneric.Builder().collidable(true).position(position).sprite(sprite);
@@ -157,7 +176,8 @@ public class LevelLoader {
                                     .savedSprite(new Sprite(tileSet, 7)).position(position);
                             break;
                         case 14: {
-                            builder = new BlockGeneric.Builder().position(position).size(16, 16).sprite(sprite);
+                            builder = new BlockGeneric.Builder().solid(false)
+                                    .position(position).size(16, 16).sprite(sprite);
                             int delay = properties.getInt("delay");
                             builder.addUpdateEvent(new TimedEntityEvent(
                                     delay,
@@ -176,7 +196,8 @@ public class LevelLoader {
                         }
                         break;
                         case 15: {
-                            builder = new BlockGeneric.Builder().position(position).size(16, 16).sprite(sprite);
+                            builder = new BlockGeneric.Builder().solid(false)
+                                    .position(position).size(16, 16).sprite(sprite);
                             int delay = properties.getInt("delay");
                             builder.addUpdateEvent(new TimedEntityEvent(
                                     delay,
@@ -241,6 +262,7 @@ public class LevelLoader {
                             Color4f lightColor = new Color4f(1, 1, 1, 0.9f);
                             level.addLight(new RadialLight(position.add(32, 3), 600, 400, lightColor, level.ambientColor));
                         }
+                        case 3:case 4:case 9:case 11:case 12:case 35:case 36:case 43:case 44:
                         case 26:
                             builder = new BlockGeneric.Builder().solid(false).position(position).sprite(sprite);
                             break;
@@ -262,6 +284,21 @@ public class LevelLoader {
                                     }
                             ));
                         }
+                        break;
+                        case 39:
+                            int destination = properties.getInt("destination");
+                            String destPortal = properties.getString("destPortal");
+                            int width = properties.getInt("portalWidth"), height = properties.getInt("portalHeight");
+                            double maxAlpha = properties.getDouble("maxAlpha");
+                            Portal.Direction direction = Portal.Direction.valueOf(
+                                    properties.getString("direction").toUpperCase()
+                            );
+
+                            builder = new Portal.Builder()
+                                    .direction(direction).destination(destination).destPortal(destPortal)
+                                    .maxAlpha((float) maxAlpha)
+                                    .sprite(null).collidable(true)
+                                    .width(width).height(height).position(position);
                             break;
                         default:
                             builder = new BlockGeneric.Builder().collidable(true).position(position).sprite(sprite)

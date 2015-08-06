@@ -10,15 +10,14 @@ import game.level.block.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import game.math.Vec2d;
 import org.json.*;
 
 public class Level {
 
-    private static Level hubLevel, scienceLevel;
-
-    private int id;
+    public static Level hubLevel, scienceLevel;
 
     public static Level currentLevel;
     public static ArrayList<Level> levels = new ArrayList<>();
@@ -37,12 +36,10 @@ public class Level {
     private int lightBlendFunc;
 
     static {
-        hubLevel = new Level("/maps/hub.json", SpriteSheet.tileSet1, SpriteSheet.levelBG1, 0,
-                new Color4f(0x10/255f, 0x10/255f, 0x1a/255f, 1));
+        hubLevel = new Level("/maps/hub.json", SpriteSheet.levelBG1, new Color4f(0x10/255f, 0x10/255f, 0x1a/255f, 1));
         hubLevel.setLightBlendFunc(1);
 
-        scienceLevel = new Level("/maps/science.json", SpriteSheet.tileSet1, SpriteSheet.levelBG2, 1,
-                new Color4f(.8f, .8f, .8f, 1));
+        scienceLevel = new Level("/maps/science.json", SpriteSheet.levelBG2, new Color4f(.8f, .8f, .8f, 1));
         scienceLevel.setLightBlendFunc(0);
 
         setLevel(scienceLevel);
@@ -50,10 +47,8 @@ public class Level {
 
     public int width, height; // in pixels
 
-    public Level(String path, SpriteSheet tileSet, SpriteSheet background, int id, Color4f ambientColor){
+    public Level(String path, SpriteSheet background, Color4f ambientColor){
         this.ambientColor.setEqual(ambientColor);
-        this.id = id;
-        levels.add(this);
         this.background = background;
         try {
             loadLevelFromFile(path);
@@ -61,6 +56,7 @@ public class Level {
             e.printStackTrace();
         }
         create();
+        levels.add(this);
     }
 
     public void create(){}
@@ -74,24 +70,37 @@ public class Level {
         blocks.stream().filter(block -> block.active && block.isOnScreen()).forEach(Block::update);
         entities.stream().filter(entity -> entity.active && entity.isOnScreen()).forEach(Entity::update);
 
-        entities.stream().filter(Entity::isCollider).forEach(entity -> entity.pollCollisions(entities));
-        entities.stream().filter(Entity::isCollider).forEach(entity -> entity.pollCollisions(blocks));
+        entities.stream().filter(e -> e.isCollider() && e.isOnScreen()).forEach(entity -> {
+            entity.pollCollisions(entities);
+            entity.pollCollisions(blocks);
+        });
 
-        ArrayList<Block> destroyedBlocks = new ArrayList<>();
-        ArrayList<Entity> destroyedEntities = new ArrayList<>();
+        Iterator<Block> blockIterator = blocks.iterator();
+        Iterator<Entity> entityIterator = entities.iterator();
 
-        blocks.stream().filter(Block::isDestroyed).forEach(destroyedBlocks::add);
-        entities.stream().filter(Entity::isDestroyed).forEach(destroyedEntities::add);
+        while(blockIterator.hasNext()) {
+            Block currentBlock = blockIterator.next();
+            if(currentBlock.isDestroyed())
+                blockIterator.remove();
+        }
 
-        destroyedBlocks.forEach(this::removeEntity);
-        destroyedEntities.forEach(this::removeEntity);
+        while(entityIterator.hasNext()) {
+            Entity currentEntity = entityIterator.next();
+            if(currentEntity.isDestroyed())
+                entityIterator.remove();
+        }
     }
 
     public void render(GL2 gl) {
+        Vec2d camera = Game.scene.camera;
+
+        gl.glLoadIdentity();
+        gl.glTranslated(-camera.x, camera.y, 0);
+
         background.renderSprite(0, Game.scene.getCamera(), new Vec2d(0, 0), 0, 0, false, false, gl);
 
-        blocks.stream().filter(b -> b.active).forEach(b -> b.render(gl));
-        entities.stream().filter(e -> e.active).forEach(e -> e.render(false, false, gl));
+        blocks.stream().filter(b -> b.active && b.isOnScreen()).forEach(b -> b.render(gl));
+        entities.stream().filter(e -> e.active && !e.renderInFront && e.isOnScreen()).forEach(e -> e.render(false, false, gl));
 
         Game.scene.getPlayer().render(gl);
 
@@ -102,32 +111,39 @@ public class Level {
             renderLightMap(gl);
         }
 
+        entities.stream().filter(e -> e.renderInFront && e.isOnScreen()).forEach(e -> e.render(false, false, gl));
     }
 
     private void prepareLightMap(GL2 gl) {
-        gl.glBindFramebuffer(GL2.GL_FRAMEBUFFER, Game.scene.getLightMapFbo()[0]);
-        gl.glLoadIdentity();
+//      gl.glBindFramebuffer(GL2.GL_FRAMEBUFFER, Game.scene.getLightMapFbo()[0]);
+//      gl.glLoadIdentity();
+        FrameBuffer.lightMap.bind(gl);
 
         gl.glEnable(GL2.GL_BLEND);
         gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
         gl.glClearColor(ambientColor.r, ambientColor.g, ambientColor.b, 1);
+//      gl.glClearColor(1, 0, 0, 1);
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
 
         lights.forEach(l -> l.render(gl));
 
         gl.glDisable(GL2.GL_BLEND);
+
+        FrameBuffer.unbindCurrentFramebuffer(gl);
     }
 
     private void renderLightMap(GL2 gl) {
-        float w = Game.scene.getWidth();
-        float h = Game.scene.getHeight();
+        float w = Game.WIDTH;
+        float h = Game.HEIGHT;
         float x = 0;
         float y = 0;
         gl.glLoadIdentity();
 
-        gl.glBindFramebuffer(GL2.GL_FRAMEBUFFER, 0);
-        gl.glEnable(GL2.GL_TEXTURE_2D);
-        gl.glBindTexture(GL2.GL_TEXTURE_2D, Game.scene.getLightMapTexture()[0]);
+//      gl.glBindFramebuffer(GL2.GL_FRAMEBUFFER, 0);
+//      gl.glEnable(GL2.GL_TEXTURE_2D);
+//      gl.glBindTexture(GL2.GL_TEXTURE_2D, Game.scene.getLightMapTexture()[0]);
+
+        FrameBuffer.lightMap.bindTexture(gl);
 
         gl.glEnable(GL2.GL_BLEND);
         switch(lightBlendFunc) {
@@ -156,7 +172,8 @@ public class Level {
             gl.glVertex2f(x+w, y);
         gl.glEnd();
         gl.glDisable(GL2.GL_BLEND);
-        gl.glDisable(GL2.GL_TEXTURE_2D);
+        FrameBuffer.lightMap.unbindTexture(gl);
+//      gl.glDisable(GL2.GL_TEXTURE_2D);
     }
 
     public synchronized void restart() {
@@ -191,8 +208,6 @@ public class Level {
     public void addLight(Light light) {
         lights.add(light);
     }
-
-    public int getId() { return id; }
 
     public static Level getCurrentLevel() {
         return currentLevel;

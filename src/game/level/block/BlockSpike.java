@@ -24,22 +24,22 @@ public class BlockSpike extends Block {
         switch(direction) {
             case UP:
                 vert1.setEqual(position.x + width/2, position.y);
-                vert2.setEqual(position.x+1, position.y + height);
-                vert3.setEqual(position.x + width-1, position.y + height);
+                vert2.setEqual(position.x, position.y + height);
+                vert3.setEqual(position.x + width, position.y + height);
                 break;
             case RIGHT:
-                vert1.setEqual(position.x, position.y + 1);
+                vert1.setEqual(position.x, position.y);
                 vert2.setEqual(position.x + width, position.y + height/2);
-                vert3.setEqual(position.x, position.y + height-1);
+                vert3.setEqual(position.x, position.y + height);
                 break;
             case DOWN:
-                vert1.setEqual(position.x+1, position.y);
-                vert2.setEqual(position.x + width-1, position.y);
+                vert1.setEqual(position.x, position.y);
+                vert2.setEqual(position.x + width, position.y);
                 vert3.setEqual(position.x + width/2, position.y + height);
                 break;
             case LEFT:
-                vert1.setEqual(position.x + width, position.y + 1);
-                vert2.setEqual(position.x + width, position.y + height-1);
+                vert1.setEqual(position.x + width, position.y);
+                vert2.setEqual(position.x + width, position.y + height);
                 vert3.setEqual(position.x, position.y + height/2);
                 break;
         }
@@ -59,8 +59,9 @@ public class BlockSpike extends Block {
         public Direction direction;
 
         {
-            solid = true;
+            solid = false;
             collidable = true;
+            special = true;
         }
 
         public Builder() {}
