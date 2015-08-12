@@ -3,11 +3,14 @@
     <output-path>$PROJECT_DIR$/out/artifacts/GuyGame_jar</output-path>
     <root id="archive" name="GuyGame.jar">
       <element id="module-output" name="GuyGame" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jogl/jogl-all.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/commons-io-2.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/vorbisspi1.0.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/org.json-20120521.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/tritonus_share.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jorbis-0.0.17.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/tinysound-1.1.1.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$PROJECT_DIR$/lib/jogl/gluegen-rt.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/org.json-20120521.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/commons-io-2.4.jar" path-in-jar="/" />
-      <element id="extracted-dir" path="$PROJECT_DIR$/lib/jogl/jogl-all.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

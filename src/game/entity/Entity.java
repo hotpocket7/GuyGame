@@ -10,7 +10,6 @@ import game.event.EntityEvent;
 import game.event.TimedEntityEvent;
 import game.graphics.Animation;
 import game.graphics.Sprite;
-import game.level.Level;
 import game.math.Vec2d;
 
 import java.util.ArrayList;
@@ -257,11 +256,15 @@ public abstract class Entity {
     }
 
     public boolean isOnScreen() {
-        Vec2d camera = Game.scene.getCamera();
+        Vec2d camera = Game.screen.getCamera();
         int w = Game.WIDTH;
         int h = Game.HEIGHT;
         return position.x + width > camera.x && position.y + height > camera.y
                 && position.x < camera.x + w && position.y < camera.y + h;
+    }
+
+    public Sprite getSprite() {
+        return sprite;
     }
 
     public static abstract class Builder {

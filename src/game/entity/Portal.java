@@ -50,7 +50,7 @@ public class Portal extends Entity {
             return;
         }
 
-        Player player = Game.scene.getPlayer();
+        Player player = Game.screen.getPlayer();
         Vec2d prevPlayerPos = new Vec2d(player.position);
 
         float width = (float) this.width;
@@ -62,25 +62,25 @@ public class Portal extends Entity {
             alpha = maxAlpha * (float) Math.abs(position.x - width + player.position.x) / (width/2);
         }
 
-        Vec2d previousCamera = new Vec2d(Game.scene.camera);
-        Game.scene.camera.setEqual(destPortal.position);
+        Vec2d previousCamera = new Vec2d(Game.screen.getCamera());
+        Game.screen.setCamera(destPortal.position);
 
         FrameBuffer.portal.bind(gl);
         gl.glLoadIdentity();
-        gl.glTranslated(Game.scene.camera.x, Game.scene.camera.y, 0);
+        gl.glTranslated(Game.screen.getCamera().x, Game.screen.getCamera().y, 0);
         player.setPosition(player.position.subtract(position).add(destPortal.position));
         destination.render(gl);
         FrameBuffer.unbindCurrentFramebuffer(gl);
 
         player.setPosition(prevPlayerPos);
 
-        Game.scene.camera.setEqual(previousCamera);
+        Game.screen.setCamera(previousCamera);
 
         gl.glEnable(GL2.GL_BLEND);
         gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
         FrameBuffer.portal.bindTexture(gl);
         gl.glLoadIdentity();
-        gl.glTranslated(-Game.scene.camera.x, Game.scene.camera.y, 0);
+        gl.glTranslated(-Game.screen.getCamera().x, Game.screen.getCamera().y, 0);
 
 
         gl.glBegin(GL2.GL_QUADS);
@@ -130,9 +130,41 @@ public class Portal extends Entity {
                 }
             }
             else if(player.position.x < position.x + width/2) {
-                    Level.setLevel(destination);
-                    player.setPosition(newPosition);
-                }
+                Level.setLevel(destination);
+                player.setPosition(newPosition);
+            }
+
+            if(!destination.music.playing()) {
+                destination.music.play(true, 0);
+            } else if(!destination.music.done()) {
+                destination.music.resume();
+            }
+
+            switch(direction) {
+                case RIGHT:
+                    destination.music.setVolume(
+                            Math.min(destination.musicVolume,
+                                     Math.abs(player.position.x - position.x) / width * destination.musicVolume)
+                    );
+                    Level.getCurrentLevel().music.setVolume(
+                            Math.min(Level.getCurrentLevel().musicVolume,
+                                    Math.abs(position.x + width - player.position.x) / width
+                                            * Level.getCurrentLevel().musicVolume)
+                    );
+                    break;
+                case LEFT:
+                    destination.music.setVolume(
+                            Math.min(destination.musicVolume,
+                                    Math.abs(position.x + width - player.position.x) / width * destination.musicVolume)
+                    );
+                    Level.getCurrentLevel().music.setVolume(
+                            Math.min(Level.getCurrentLevel().musicVolume,
+                                    Math.abs(player.position.x - position.x) / width * Level.getCurrentLevel().musicVolume)
+                    );
+            }
+            if(destination.music.getVolume() / destination.musicVolume < 0.005 && destination.music.playing()) {
+                destination.music.pause();
+            }
         }
     }
 

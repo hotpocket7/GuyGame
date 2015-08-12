@@ -1,6 +1,7 @@
 package game.graphics;
 
 import game.Game;
+import game.Screen;
 
 import java.util.Arrays;
 
@@ -29,7 +30,7 @@ public class Animation {
     }
 
     public Sprite nextSprite() {
-        if(Scene.getTotalUpdates() % Math.ceil((float) Game.fps / fps) != 0) return sprites[currentIndex];
+        if(Screen.getTotalUpdates() % Math.ceil((float) Game.fps / fps) != 0) return sprites[currentIndex];
 
         currentIndex++;
         currentIndex %= sprites.length;

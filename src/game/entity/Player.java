@@ -8,6 +8,7 @@ import game.graphics.Shader;
 import game.level.Level;
 import game.level.block.Block;
 import game.sound.Sounds;
+import kuusisto.tinysound.TinySound;
 
 import java.util.ArrayList;
 
@@ -44,6 +45,7 @@ public class Player extends Entity {
 
     public void die() {
         if(state == State.DYING || !active) return;
+        Sounds.playerDeath.play(0.4);
         deathTime = System.currentTimeMillis();
         active = false;
         state = State.DYING;
@@ -90,8 +92,6 @@ public class Player extends Entity {
     }
 
     private void handleJumping() {
-        System.out.println("Jumps used: " + jumpsUsed + "/" + maxJumps);
-
         if (Game.game.input.jumpDown && !Game.game.input.jumpWasDown && jumpsUsed < maxJumps) {
             if(state == State.GROUNDED) {
                 Sounds.playerJump.play();
@@ -186,7 +186,7 @@ public class Player extends Entity {
 
     public static class Builder extends Entity.Builder {
         {
-            size(12, 19);
+            size(11, 19);
         }
         public Entity build() {
             return new Player(this);

@@ -8,6 +8,8 @@ public class Sprite {
     public static Sprite[] playerIdle, playerRun, playerJump, playerFall;
     public static Sprite[] torch;
 
+    public static Sprite menuBG, menuTitle;
+
     public static void loadSprites() {
         playerIdle = SpriteSheet.playerIdle.split();
         for(int i = 0; i <= 3; i++) {
@@ -34,6 +36,9 @@ public class Sprite {
         }
 
         torch = SpriteSheet.tileSet1.split(40, 47);
+
+        menuBG = new Sprite(SpriteSheet.menuBG);
+        menuTitle = new Sprite(SpriteSheet.menuTitle);
     }
 
     private SpriteSheet spriteSheet;
@@ -41,6 +46,11 @@ public class Sprite {
 
     private Vec2d offset = new Vec2d();
     private int offsetWidth = 0, offsetHeight = 0;
+
+    public Sprite(SpriteSheet sheet) {
+        this.spriteSheet = sheet;
+        this.index = 0;
+    }
 
     public Sprite(SpriteSheet spriteSheet, int index) {
         this.spriteSheet = spriteSheet;
@@ -56,6 +66,10 @@ public class Sprite {
 
     public void render(Vec2d position, boolean flipHorizontal, boolean flipVertical, GL2 gl) {
         spriteSheet.renderSprite(index, position, offset, offsetWidth, offsetHeight, flipHorizontal, flipVertical, gl);
+    }
+
+    public SpriteSheet getSpriteSheet() {
+        return spriteSheet;
     }
 
     //Setters

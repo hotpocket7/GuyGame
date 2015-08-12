@@ -15,16 +15,14 @@ public final class CollisionHandler {
         if(!block.solid)
             return;
 
-
         RectangularHitbox entityHitbox = entity.getHitbox();
         RectangularHitbox blockHitbox  = block.getHitbox();
 
         Rectangle2D intersection = entityHitbox.bounds.createIntersection(blockHitbox.bounds);
 
-
-        if(intersection.getWidth() >= intersection.getHeight()
-                || block.position.y > entity.position.subtract(entity.velocity).y + entity.height)
-            return; // No horizontal collision
+//      if(intersection.getWidth() >= intersection.getHeight()
+//              || block.position.y > entity.position.subtract(entity.velocity).y + entity.height)
+//          return; // No horizontal collision
         if(entityHitbox.position.x < blockHitbox.position.x && block.solidLeft) {
             // Collision to right of entity
             entity.position.x = blockHitbox.position.x - entity.width;

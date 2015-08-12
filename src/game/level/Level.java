@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import game.math.Vec2d;
+import kuusisto.tinysound.Music;
+import kuusisto.tinysound.TinySound;
 import org.json.*;
 
 public class Level {
@@ -32,22 +34,29 @@ public class Level {
 
     private SpriteSheet background;
 
+    public Music music;
+    public double musicVolume = 1;
+
     public Color4f ambientColor = new Color4f();
     private int lightBlendFunc;
 
     static {
-        hubLevel = new Level("/maps/hub.json", SpriteSheet.levelBG1, new Color4f(0x10/255f, 0x10/255f, 0x1a/255f, 1));
+        hubLevel = new Level("/maps/hub.json", SpriteSheet.levelBG1, new Color4f(0x10/255f, 0x10/255f, 0x1a/255f, 1),
+                   "/sound/music/hub.ogg");
         hubLevel.setLightBlendFunc(1);
+        hubLevel.musicVolume = 0.4;
 
-        scienceLevel = new Level("/maps/science.json", SpriteSheet.levelBG2, new Color4f(.8f, .8f, .8f, 1));
+        scienceLevel = new Level("/maps/science.json", SpriteSheet.levelBG2, new Color4f(.8f, .8f, .8f, 1),
+                "/sound/music/jumpStage.ogg");
         scienceLevel.setLightBlendFunc(0);
+        scienceLevel.musicVolume = 0.2;
 
-        setLevel(scienceLevel);
+        setLevel(hubLevel);
     }
 
     public int width, height; // in pixels
 
-    public Level(String path, SpriteSheet background, Color4f ambientColor){
+    public Level(String path, SpriteSheet background, Color4f ambientColor, String musicPath){
         this.ambientColor.setEqual(ambientColor);
         this.background = background;
         try {
@@ -55,6 +64,9 @@ public class Level {
         } catch (JSONException | IOException e) {
             e.printStackTrace();
         }
+
+        music = TinySound.loadMusic(musicPath);
+
         create();
         levels.add(this);
     }
@@ -92,17 +104,18 @@ public class Level {
     }
 
     public void render(GL2 gl) {
-        Vec2d camera = Game.scene.camera;
+        Vec2d camera = Game.screen.getCamera();
 
         gl.glLoadIdentity();
         gl.glTranslated(-camera.x, camera.y, 0);
 
-        background.renderSprite(0, Game.scene.getCamera(), new Vec2d(0, 0), 0, 0, false, false, gl);
+        background.renderSprite(0, camera, new Vec2d(0, 0), 0, 0, false, false, gl);
 
         blocks.stream().filter(b -> b.active && b.isOnScreen()).forEach(b -> b.render(gl));
-        entities.stream().filter(e -> e.active && !e.renderInFront && e.isOnScreen()).forEach(e -> e.render(false, false, gl));
+        entities.stream().filter(e -> e.active && !e.renderInFront && e.isOnScreen()).forEach(e -> e.render(false,
+                false, gl));
 
-        Game.scene.getPlayer().render(gl);
+        Game.screen.getPlayer().render(gl);
 
         if(lights.size() > 0) {
             //Lights are rendered to a light map FBO, which is then blended with the fully lit scene by multiplying
@@ -177,11 +190,11 @@ public class Level {
     }
 
     public synchronized void restart() {
-        Game.scene.getPlayer().active = true;
-        Game.scene.getPlayer().position.setEqual(spawn);
-        Game.scene.getPlayer().velocity.setEqual(new Vec2d(0, 0));
-        Game.scene.getPlayer().state = Player.State.AIRBORNE;
-        Game.scene.getPlayer().jumpsUsed = 0;
+        Game.screen.getPlayer().active = true;
+        Game.screen.getPlayer().position.setEqual(spawn);
+        Game.screen.getPlayer().velocity.setEqual(new Vec2d(0, 0));
+        Game.screen.getPlayer().state = Player.State.AIRBORNE;
+        Game.screen.getPlayer().jumpsUsed = 0;
 
         blocks.stream().filter(Block::isTemporary).forEach(Block::destroy);
         entities.stream().filter(Entity::isTemporary).forEach(Entity::destroy);
@@ -196,6 +209,11 @@ public class Level {
             return;
         }
         entities.add(entity);
+//      for(Layer layer : layers) {
+//          if(entity.getSprite() != null && entity.getSprite().getSpriteSheet() == layer.spriteSheet) {
+//              layer.entities.add(entity);
+//          }
+//      }
     }
 
 
@@ -219,8 +237,13 @@ public class Level {
     }
 
     public static void setLevel(Level level) {
+//      if(currentLevel != null && currentLevel.music != null && currentLevel.music.playing())
+//          currentLevel.music.stop();
+
         currentLevel = level;
-        Game.scene.getPlayer().position.setEqual(level.spawn);
+        Game.screen.getPlayer().position.setEqual(level.spawn);
+
+//      level.music.play(true, level.musicVolume);
     }
 
     public void setLightBlendFunc(int id) {

@@ -13,7 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static java.lang.Math.*;
+import static java.lang.Math.abs;
+import static java.lang.Math.signum;
 
 public class SpriteSheet {
 
@@ -21,6 +22,9 @@ public class SpriteSheet {
     public static SpriteSheet tileSet1, tileSet2;
     public static SpriteSheet pickupSheet;
     public static SpriteSheet levelBG1, levelBG2;
+    public static SpriteSheet menuBG, menuTitle;
+
+    public static SpriteSheet lastSheet;
 
     public static void loadSpriteSheets() {
         //Blocks
@@ -38,6 +42,9 @@ public class SpriteSheet {
 
         levelBG1 = new SpriteSheet("/backgrounds/bg1.png", 800, 608);
         levelBG2 = new SpriteSheet("/backgrounds/bg2.png", 800, 608);
+
+        menuBG = new SpriteSheet("/backgrounds/menu.png", 800, 608);
+        menuTitle = new SpriteSheet("/menu/title.png", 696, 196);
     }
 
     private String path;
@@ -60,13 +67,6 @@ public class SpriteSheet {
     public void renderSprite(int index, Vec2d position, Vec2d offset,
                              int offsetWidth, int offsetHeight,
                              boolean flipHorizontal, boolean flipVertical, GL2 gl) {
-        Vec2d camera = Game.scene.getCamera();
-        if(position.x + spriteWidth < camera.x
-                || position.y + spriteHeight  < camera.y
-                || position.x > camera.x + Game.WIDTH
-                || position.y > camera.y + Game.HEIGHT)
-            return;
-
         float x = (float) position.x;
         float y = (float) position.y;
 
@@ -76,9 +76,9 @@ public class SpriteSheet {
 
         Vec2d finalOffset = new Vec2d(offset.x, offset.y);
 
-        if(flipHorizontal)
+        if (flipHorizontal)
             finalOffset.x = signum(offset.x) * (abs(offsetWidth) - abs(offset.x));
-        if(flipVertical)
+        if (flipVertical)
             finalOffset.y = signum(offset.y) * (abs(offsetHeight) - abs(offset.y));
 
         x += finalOffset.x;
@@ -91,8 +91,11 @@ public class SpriteSheet {
 
         gl.glEnable(GL2.GL_TEXTURE_2D);
 
-        texture.enable(gl);
-        texture.bind(gl);
+        if(lastSheet != this) {
+            texture.enable(gl);
+            texture.bind(gl);
+            lastSheet = this;
+        }
 
         float x1 = flipHorizontal ? x + spriteWidth : x;
         float y1 = flipVertical ? y + spriteHeight : y;
@@ -102,24 +105,27 @@ public class SpriteSheet {
         gl.glBegin(GL2.GL_QUADS);
         gl.glColor4f(1, 1, 1, 1);
 
-        gl.glTexCoord2f(xx, yy+(float)spriteHeight/height);
+        gl.glTexCoord2f(xx, yy + (float) spriteHeight / height);
         gl.glVertex2f(x1, y1);
 
         gl.glTexCoord2f(xx, yy);
         gl.glVertex2f(x1, y2);
 
-        gl.glTexCoord2f(xx + (float) spriteWidth/width, yy);
+        gl.glTexCoord2f(xx + (float) spriteWidth / width, yy);
         gl.glVertex2f(x2, y2);
 
-        gl.glTexCoord2f(xx + (float) spriteWidth/width, yy + (float) spriteHeight/height);
+        gl.glTexCoord2f(xx + (float) spriteWidth / width, yy + (float) spriteHeight / height);
         gl.glVertex2f(x2, y1);
 
         gl.glEnd();
-        gl.glBindTexture(GL2.GL_TEXTURE_2D, 0);
         gl.glDisable(GL2.GL_TEXTURE_2D);
         gl.glDisable(GL2.GL_BLEND);
-
     }
+
+    public void render(Vec2d position, GL2 gl) {
+        renderSprite(0, position, new Vec2d(), 0, 0, false, false, gl);
+    }
+
 
     private void load() {
         try {
@@ -137,19 +143,30 @@ public class SpriteSheet {
     }
 
     public Sprite[] split(int startIndex, int endIndex) {
-        Sprite[] sprites = new Sprite[endIndex-startIndex + 1];
-        for(int i = 0; i < sprites.length; i++) {
+        Sprite[] sprites = new Sprite[endIndex - startIndex + 1];
+        for (int i = 0; i < sprites.length; i++) {
             sprites[i] = new Sprite(this, i + startIndex);
         }
         return sprites;
     }
 
     public Sprite[] split() {
-        return split(0, numSprites-1);
+        return split(0, numSprites - 1);
     }
 
     public int getNumSprites() {
         return numSprites;
     }
 
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public Texture getTexture() {
+        return texture;
+    }
 }

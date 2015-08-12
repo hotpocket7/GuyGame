@@ -24,7 +24,7 @@ public class ConeLight extends Light {
         int nsd = 16;
         float delta = (endAngle - startAngle) / nsd;
 
-        Vec2d camera = Game.game.scene.getCamera();
+        Vec2d camera = Game.game.screen.getCamera();
 
         if(position.x < camera.x || position.x > camera.x + Game.WIDTH
                 || position.y < camera.y || position.y > camera.y + Game.HEIGHT)

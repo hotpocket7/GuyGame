@@ -39,12 +39,12 @@ public class BlockSave extends Block {
     protected void onCollide(Entity entity) {
         if(entity instanceof Player && Game.game.input.saveDown && !Game.game.input.saveWasDown) {
             save();
-            sound.play(0.075);
+            sound.play(0.1);
         }
     }
 
     public void save() {
-        Level.getCurrentLevel().spawn.setEqual(Game.scene.getPlayer().position);
+        Level.getCurrentLevel().spawn.setEqual(Game.screen.getPlayer().position);
         sprite = savedSprite;
         if(!lightActive) {
             frameCount = 0;

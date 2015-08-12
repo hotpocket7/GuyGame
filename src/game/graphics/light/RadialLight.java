@@ -28,7 +28,7 @@ public class RadialLight extends Light {
 
     public void render(GL2 gl) {
         int nsd = 16;
-        Vec2d camera = Game.scene.getCamera();
+        Vec2d camera = Game.screen.getCamera();
 
         if(position.x < camera.x || position.x > camera.x + Game.WIDTH
                 || position.y < camera.y || position.y > camera.y + Game.HEIGHT)
