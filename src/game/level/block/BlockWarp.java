@@ -16,7 +16,7 @@ public class BlockWarp extends Block {
     public void onCollide(Entity entity) {
         if(entity instanceof Player) {
             Level.setLevel(destination);
-            entity.setPosition(destination.spawn);
+            entity.setPos(destination.spawn);
         }
     }
 

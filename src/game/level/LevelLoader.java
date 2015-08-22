@@ -52,13 +52,17 @@ public class LevelLoader {
         if (properties.has("moving")) {
             if (properties.getString("moving").equals("")) {
                 Vec2d velocity = new Vec2d(
-                        properties.getInt("xVel"),
-                        properties.getInt("yVel")
+                        properties.has("xVel") ? properties.getDouble("xVel") : 0,
+                        properties.has("yVel") ? properties.getDouble("yVel") : 0
                 );
                 builder.velocity(velocity);
+                double xMin = properties.has("xMin") ? properties.getDouble("xMin") : 0;
+                double xMax = properties.has("xMax") ? properties.getDouble("xMax") : 0;
+                double yMin = properties.has("yMin") ? properties.getDouble("yMin") : 0;
+                double yMax = properties.has("yMax") ? properties.getDouble("yMax") : 0;
                 builder.addUpdateEvent(new EntityBounceEvent(
-                        new Vec2d(properties.getInt("xMax"), properties.getInt("yMax")),
-                        new Vec2d(properties.getInt("xMin"), properties.getInt("yMin"))
+                        new Vec2d(xMax, yMax),
+                        new Vec2d(xMin, yMin)
                 ));
             }
         }
@@ -139,9 +143,9 @@ public class LevelLoader {
                                     .solidTop(true).solidBottom(false).solidLeft(false).solidRight(false)
                                     .collidable(true).size(32, 16).position(position).sprite(sprite);
                             break;
-                        case 16:
-                        case 24:
-                        case 32:
+                        case 16:case 21:
+                        case 24:case 29:
+                        case 32:case 37:
                             builder = new BlockGeneric.Builder().solid(false).position(position).sprite(sprite);
                             break;
                         case 48:
@@ -187,7 +191,7 @@ public class LevelLoader {
                                                 .sprite(new Sprite(SpriteSheet.pickupSheet, 1, -8, 8, JumpPickup.DEFAULT_WIDTH, JumpPickup.DEFAULT_HEIGHT))
                                                 .temporary(true)
                                                 .collider(true)
-                                                .addUpdateEvent(Events.destroyOnLeaveScreen)
+                                                .addUpdateEvent(Events.destroyOnLeaveScreen).updateOffScreen(true)
                                                 .addCollisionEvent(Events.destroyOnTouchBlock);
                                         Level.getCurrentLevel().addEntity(builder1.build());
                                     }
@@ -207,7 +211,7 @@ public class LevelLoader {
                                                 .sprite(new Sprite(SpriteSheet.pickupSheet, 1, -8, 8, JumpPickup.DEFAULT_WIDTH, JumpPickup.DEFAULT_HEIGHT))
                                                 .temporary(true)
                                                 .collider(true)
-                                                .addUpdateEvent(Events.destroyOnLeaveScreen)
+                                                .addUpdateEvent(Events.destroyOnLeaveScreen).updateOffScreen(true)
                                                 .addCollisionEvent(Events.destroyOnTouchBlock);
                                         Level.getCurrentLevel().addEntity(builder1.build());
                                     }
@@ -242,7 +246,7 @@ public class LevelLoader {
                                                 .sprite(new Sprite(SpriteSheet.pickupSheet, 1, -8, 8, JumpPickup.DEFAULT_WIDTH, JumpPickup.DEFAULT_HEIGHT))
                                                 .temporary(true)
                                                 .collider(true)
-                                                .addUpdateEvent(Events.destroyOnLeaveScreen)
+                                                .addUpdateEvent(Events.destroyOnLeaveScreen).updateOffScreen(true)
                                                 .addCollisionEvent(Events.destroyOnTouchBlock);
                                         Level.getCurrentLevel().addEntity(builder1.build());
                                     }
@@ -259,7 +263,8 @@ public class LevelLoader {
                         }
                         case 25: {
                             Color4f lightColor = new Color4f(1, 1, 1, 0.9f);
-                            level.addLight(new RadialLight(position.add(32, 3), 600, 400, lightColor, level.ambientColor));
+                            level.addLight(new RadialLight(position.add(32, 3), 500, 300, lightColor, level
+                                    .ambientColor));
                         }
                         case 3:case 4:case 9:case 11:case 12:case 35:case 36:case 43:case 44:
                         case 26:
@@ -277,13 +282,18 @@ public class LevelLoader {
                                                 .sprite(new Sprite(SpriteSheet.pickupSheet, 1, -8, 8, JumpPickup.DEFAULT_WIDTH, JumpPickup.DEFAULT_HEIGHT))
                                                 .temporary(true)
                                                 .collider(true)
-                                                .addUpdateEvent(Events.destroyOnLeaveScreen)
+                                                .addUpdateEvent(Events.destroyOnLeaveScreen).updateOffScreen(true)
                                                 .addCollisionEvent(Events.destroyOnTouchBlock);
                                         Level.getCurrentLevel().addEntity(builder1.build());
                                     }
                             ));
                         }
                         break;
+                        case 32:
+                            builder = new BlockGeneric.Builder().special(true)
+                                    .solidTop(true).solidBottom(false).solidLeft(false).solidRight(false)
+                                    .collidable(true).size(32, 16).position(position).sprite(sprite);
+                            break;
                         case 39:
                             int destination = properties.getInt("destination");
                             String destPortal = properties.getString("destPortal");

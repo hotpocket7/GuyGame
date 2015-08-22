@@ -21,8 +21,8 @@ public class Screen extends GLCanvas implements GLEventListener {
     private Vec2d camera;
 
     private Scene currentScene;
-    private PlayScene playScene;
-    private MenuScene menuScene;
+    public PlayScene playScene;
+    public MenuScene menuScene;
 
     public Screen(Dimension dimension, int height, GLCapabilities caps) {
         super(caps);
@@ -75,7 +75,7 @@ public class Screen extends GLCanvas implements GLEventListener {
 
         playScene = new PlayScene();
         menuScene = new MenuScene();
-        setScene(menuScene);
+        setScene(playScene);
 
         FrameBuffer.initFrameBuffers(gl);
 
@@ -110,7 +110,7 @@ public class Screen extends GLCanvas implements GLEventListener {
 
     public void setScene(Scene scene) {
         currentScene = scene;
-        currentScene.load();
+        scene.load();
     }
 
     public Vec2d getCamera() {

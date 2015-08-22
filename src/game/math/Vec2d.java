@@ -8,16 +8,18 @@ import java.util.Comparator;
 public class Vec2d {
 
     public double x, y;
-    public Vec2d angleComparatorInitialVertex;
-
-    public Vec2d(Vec2d vec) {
-        x = vec.x;
-        y = vec.y;
-    }
 
     public Vec2d(double x, double y) {
         this.x = x;
         this.y = y;
+    }
+
+    public Vec2d(Vec2d v) {
+        this(v.x, v.y);
+    }
+
+    public Vec2d(double a) {
+        this(a, a);
     }
 
     public Vec2d(){
@@ -84,16 +86,15 @@ public class Vec2d {
         return atan(y/x);
     }
 
+    public boolean equals(Vec2d v) {
+        return Double.compare(v.x, x) == 0 && Double.compare(v.y, y) == 0;
+    }
+
+    public double distance(Vec2d v) {
+        return subtract(v).magnitude();
+    }
+
     public String toString() {
         return String.format("(%f, %f)", x, y);
     }
-
-    public static Comparator<Vec2d> angleComparator = new Comparator<Vec2d>() {
-        public int compare(Vec2d v1, Vec2d v2) {
-            double angle1 = v1.subtract(v1.angleComparatorInitialVertex).angleRad();
-            double angle2 = v2.subtract(v2.angleComparatorInitialVertex).angleRad();
-
-            return Double.compare(angle1, angle2);
-        }
-    };
 }

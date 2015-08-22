@@ -51,28 +51,28 @@ public class Portal extends Entity {
         }
 
         Player player = Game.screen.getPlayer();
-        Vec2d prevPlayerPos = new Vec2d(player.position);
+        Vec2d prevPlayerPos = player.getPos();
 
         float width = (float) this.width;
         float height = (float) this.height;
 
         if(direction == Direction.RIGHT) {
-            alpha = maxAlpha * (float) Math.abs(position.x - player.position.x) / (width);
+            alpha = maxAlpha * (float) Math.abs(getXPos() - player.getXPos()) / (width);
         } else {
-            alpha = maxAlpha * (float) Math.abs(position.x - width + player.position.x) / (width/2);
+            alpha = maxAlpha * (float) Math.abs(getXPos() - width + player.getXPos()) / (width/2);
         }
 
         Vec2d previousCamera = new Vec2d(Game.screen.getCamera());
-        Game.screen.setCamera(destPortal.position);
+        Game.screen.setCamera(destPortal.getPos());
 
         FrameBuffer.portal.bind(gl);
         gl.glLoadIdentity();
         gl.glTranslated(Game.screen.getCamera().x, Game.screen.getCamera().y, 0);
-        player.setPosition(player.position.subtract(position).add(destPortal.position));
+        player.setPos(player.getPos().subtract(getPos()).add(destPortal.getPos()));
         destination.render(gl);
         FrameBuffer.unbindCurrentFramebuffer(gl);
 
-        player.setPosition(prevPlayerPos);
+        player.setPos(prevPlayerPos);
 
         Game.screen.setCamera(previousCamera);
 
@@ -90,28 +90,28 @@ public class Portal extends Entity {
             gl.glColor4f(1, 1, 1, 0);
         else
             gl.glColor4f(1, 1, 1, alpha);
-        gl.glVertex2d(position.x, 608 - (position.y + height)); // bottom left
+        gl.glVertex2d(getXPos(), 608 - (getYPos() + height)); // bottom left
 
         gl.glTexCoord2f(0, 0);
         if(direction == Direction.RIGHT)
             gl.glColor4f(1, 1, 1, 0);
         else
             gl.glColor4f(1, 1, 1, alpha);
-        gl.glVertex2d(position.x, 608 - position.y); // top left
+        gl.glVertex2d(getXPos(), 608 - getYPos()); // top left
 
         gl.glTexCoord2f(width/Game.WIDTH, 0);
         if(direction == Direction.LEFT)
             gl.glColor4f(1, 1, 1, 0);
         else
             gl.glColor4f(1, 1, 1, alpha);
-        gl.glVertex2d(position.x + width, 608 - position.y); // top right
+        gl.glVertex2d(getXPos() + width, 608 - getYPos()); // top right
 
         gl.glTexCoord2f(width/Game.WIDTH, (-height)/Game.HEIGHT);
         if(direction == Direction.LEFT)
             gl.glColor4f(1, 1, 1, 0);
         else
             gl.glColor4f(1, 1, 1, alpha);
-        gl.glVertex2d(position.x + width, 608 - (position.y + height)); // bottom right
+        gl.glVertex2d(getXPos() + width, 608 - (getYPos() + height)); // bottom right
         gl.glEnd();
         FrameBuffer.portal.unbindTexture(gl);
         gl.glDisable(GL2.GL_BLEND);
@@ -121,49 +121,50 @@ public class Portal extends Entity {
     public void onCollide(Entity entity) {
         if(entity instanceof Player) {
             Player player = (Player) entity;
-            Vec2d newPosition = player.position.subtract(position).add(destPortal.position);
+            Vec2d newPosition = player.getPos().subtract(getPos()).add(destPortal.getPos());
 
             if(direction == Direction.RIGHT) {
-                if (player.position.x > position.x + width / 2) {
+                if (player.getXPos() > getXPos() + width / 2) {
                     Level.setLevel(destination);
-                    player.setPosition(newPosition);
+                    player.setPos(newPosition);
                 }
             }
-            else if(player.position.x < position.x + width/2) {
+            else if(player.getXPos() < getXPos() + width/2) {
                 Level.setLevel(destination);
-                player.setPosition(newPosition);
+                player.setPos(newPosition);
             }
 
-            if(!destination.music.playing()) {
-                destination.music.play(true, 0);
-            } else if(!destination.music.done()) {
-                destination.music.resume();
+            if(!destination.song.playing()) {
+                destination.song.play(true, 0);
+            } else if(!destination.song.done()) {
+                destination.song.resume();
             }
 
             switch(direction) {
                 case RIGHT:
-                    destination.music.setVolume(
-                            Math.min(destination.musicVolume,
-                                     Math.abs(player.position.x - position.x) / width * destination.musicVolume)
+                    destination.song.setVolume(
+                            Math.min(destination.song.getMaxVolume(),
+                                     Math.abs(player.getXPos() - getXPos()) / width * destination.song.getMaxVolume())
                     );
-                    Level.getCurrentLevel().music.setVolume(
-                            Math.min(Level.getCurrentLevel().musicVolume,
-                                    Math.abs(position.x + width - player.position.x) / width
-                                            * Level.getCurrentLevel().musicVolume)
+                    Level.getCurrentLevel().song.setVolume(
+                            Math.min(Level.getCurrentLevel().song.getMaxVolume(),
+                                    Math.abs(getXPos() + width - player.getXPos()) / width
+                                            * Level.getCurrentLevel().song.getMaxVolume())
                     );
                     break;
                 case LEFT:
-                    destination.music.setVolume(
-                            Math.min(destination.musicVolume,
-                                    Math.abs(position.x + width - player.position.x) / width * destination.musicVolume)
+                    destination.song.setVolume(
+                            Math.min(destination.song.getMaxVolume(),
+                                    Math.abs(getXPos() + width - player.getXPos()) / width * destination.song.getMaxVolume())
                     );
-                    Level.getCurrentLevel().music.setVolume(
-                            Math.min(Level.getCurrentLevel().musicVolume,
-                                    Math.abs(player.position.x - position.x) / width * Level.getCurrentLevel().musicVolume)
+                    Level.getCurrentLevel().song.setVolume(
+                            Math.min(Level.getCurrentLevel().song.getMaxVolume(),
+                                    Math.abs(player.getXPos() - getXPos()) / width * Level.getCurrentLevel()
+                                            .song.getMaxVolume())
                     );
             }
-            if(destination.music.getVolume() / destination.musicVolume < 0.005 && destination.music.playing()) {
-                destination.music.pause();
+            if(destination.song.getVolume() / destination.song.getMaxVolume() < 0.005 && destination.song.playing()) {
+                destination.song.pause();
             }
         }
     }

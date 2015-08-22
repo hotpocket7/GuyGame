@@ -8,7 +8,6 @@ import game.graphics.Shader;
 import game.level.Level;
 import game.level.block.Block;
 import game.sound.Sounds;
-import kuusisto.tinysound.TinySound;
 
 import java.util.ArrayList;
 
@@ -34,7 +33,6 @@ public class Player extends Entity {
     private double maxFallSpeed = 9;
 
     private SpriteDirection spriteDirection = SpriteDirection.RIGHT;
-    private boolean flipHorizontal = false;
 
     private long deathTime; // Time of death, used in death shader
 
@@ -54,17 +52,17 @@ public class Player extends Entity {
     public void update() {
         if(!active) return;
 
-        acceleration.y = gravity;
+        setYAccel(gravity);
 
         velocity.x += acceleration.x;
-        position.x += velocity.x;
+        addToPos(getXVel(), 0);
 
-        if (Game.game.input.rightDown) {
-            position.x += walkSpeed;
+        if (Game.game.input.keyDown("right")) {
+            addToPos(walkSpeed, 0);
             spriteDirection = SpriteDirection.RIGHT;
             velocity.x = 0;
-        } else if (Game.game.input.leftDown) {
-            position.x -= walkSpeed;
+        } else if (Game.game.input.keyDown("left")) {
+            addToPos(-walkSpeed, 0);
             spriteDirection = SpriteDirection.LEFT;
             velocity.x = 0;
         }
@@ -75,9 +73,9 @@ public class Player extends Entity {
         if(!active) return;
 
         if (state == State.AIRBORNE) {
-            if(velocity.y > maxFallSpeed) velocity.y = maxFallSpeed;
+            if(getYVel() > maxFallSpeed) velocity.y = maxFallSpeed;
             velocity.y += acceleration.y;
-            position.y += velocity.y;
+            addToPos(0, getYVel());
         }
 
         handleBlockCollisions('y');
@@ -92,7 +90,7 @@ public class Player extends Entity {
     }
 
     private void handleJumping() {
-        if (Game.game.input.jumpDown && !Game.game.input.jumpWasDown && jumpsUsed < maxJumps) {
+        if (Game.game.input.keyHit("jump") && jumpsUsed < maxJumps) {
             if(state == State.GROUNDED) {
                 Sounds.playerJump.play();
                 velocity.y = jumpVelocity;
@@ -105,7 +103,7 @@ public class Player extends Entity {
         }
 
         if (state == State.AIRBORNE) {
-            if (!Game.game.input.jumpDown && Game.game.input.jumpWasDown && velocity.y < 0) {
+            if (Game.game.input.keyReleased("jump") && velocity.y < 0) {
                 velocity.y *= 0.45;
             }
         } else if(state == State.GROUNDED) {
@@ -128,8 +126,9 @@ public class Player extends Entity {
                     continue;
                 }
 
-                if(block.isCollidable())
+                if(block.isCollidable() && axis == 'y')
                     block.collide(this);
+                if(!active) return;
                 if(axis == 'x')
                     CollisionHandler.resolveCollisionX(this, block);
                 if(axis == 'y')
@@ -137,11 +136,19 @@ public class Player extends Entity {
             }
         }
 
-        for(Block block : Level.getCurrentLevel().blocks) {
+        for(Block block : specialBlocks) {
             if(!collides(block))
                 continue;
-            if(block.isCollidable())
-                block.collide(this);
+
+            COLLIDE:
+            {
+                if (block.isCollidable()) {
+                    if (block.hasSpecialHitbox() && axis != 'y')
+                        break COLLIDE;
+                    block.collide(this);
+                }
+            }
+            if(!active) return;
             if(axis == 'x')
                 CollisionHandler.resolveCollisionX(this, block);
             if(axis == 'y')
@@ -149,7 +156,7 @@ public class Player extends Entity {
         }
 
         if(axis == 'y')
-            if(state == State.AIRBORNE && previousState == State.GROUNDED && !Game.game.input.jumpDown) {
+            if(state == State.AIRBORNE && previousState == State.GROUNDED && !Game.game.input.keyDown("jump")) {
                 jumpsUsed++;
             } else if(state == State.GROUNDED) {
                 jumpsUsed = 0;
@@ -167,16 +174,16 @@ public class Player extends Entity {
             gl.glUniform1f(Shader.deathShader.getUniform("time", gl),
                     (float) ((deathTime - System.currentTimeMillis()) % 100000));
         }
-        super.render(flipHorizontal, false, gl);
+        super.render(gl);
         if(state == State.DYING) {
             Shader.deathShader.disable(gl);
         }
     }
 
     public void updateSprite() {
-        flipHorizontal = spriteDirection == SpriteDirection.LEFT;
+        flippedHorizontal = spriteDirection == SpriteDirection.LEFT;
         if(state == State.GROUNDED) {
-            if (Game.game.input.leftDown || Game.game.input.rightDown) setAnimation(Animation.playerRun);
+            if (Game.game.input.keyDown("left") || Game.game.input.keyDown("right")) setAnimation(Animation.playerRun);
             else setAnimation(Animation.playerIdle);
         } else if(state == State.AIRBORNE) {
             if(velocity.y < 0) setAnimation(Animation.playerJump);

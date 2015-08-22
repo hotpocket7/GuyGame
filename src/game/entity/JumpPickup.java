@@ -21,12 +21,12 @@ public class JumpPickup extends Pickup {
         }
     }
 
-    public void render(boolean flipHorizontal, boolean flipVertical, GL2 gl) {
+    public void render(GL2 gl) {
         Shader.floatShader.enable(gl);
         gl.glUniform1i(Shader.floatShader.getUniform("texture1", gl), 0);
         gl.glUniform1f(Shader.deathShader.getUniform("time", gl),
                 (float) (System.currentTimeMillis() % 2000));
-        super.render(flipHorizontal, flipVertical, gl);
+        super.render(gl);
         Shader.floatShader.disable(gl);
     }
 

@@ -4,8 +4,10 @@ import com.jogamp.opengl.GL2;
 import game.Game;
 import game.graphics.Color4f;
 import game.graphics.RenderUtils;
+import game.input.Input;
 import game.math.Vec2d;
 import game.menu.element.Element;
+import game.menu.element.SelectableElement;
 
 import java.util.ArrayList;
 import java.util.Stack;
@@ -24,6 +26,8 @@ public abstract class Menu {
     private Menu nextMenu;
 
     protected ArrayList<Element> elements = new ArrayList<>();
+    protected SelectableElement selection, previousSelection;
+    protected long moveTime = 0;
 
     protected long enterTime, exitTime;
 
@@ -43,7 +47,33 @@ public abstract class Menu {
         menuStack.push(menu);
     }
 
-    public abstract void update();
+    public void update() {
+        Input input = Game.game.input;
+
+        if(input.keyHit("down") && selection.down() != null) {
+            previousSelection = selection;
+            selection = selection.down();
+            moveTime = System.currentTimeMillis();
+        }
+        if(input.keyHit("up") && selection.up() != null) {
+            previousSelection = selection;
+            selection = selection.up();
+            moveTime = System.currentTimeMillis();
+        }
+        if(input.keyHit("left") && selection.left() != null) {
+            previousSelection = selection;
+            selection = selection.left();
+            moveTime = System.currentTimeMillis();
+        }
+        if(input.keyHit("right") && selection.right() != null) {
+            previousSelection = selection;
+            selection = selection.right();
+            moveTime = System.currentTimeMillis();
+        }
+
+        if(input.keyHit("select"))
+            selection.select();
+    }
 
     public final void render(GL2 gl) {
         elements.forEach(e -> e.render(gl));
@@ -53,6 +83,8 @@ public abstract class Menu {
                 break;
             case EXITING:
                 renderExit(gl);
+                break;
+            default:
         }
     }
 

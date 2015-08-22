@@ -20,8 +20,8 @@ public class BlockSave extends Block {
     private float lightIntensity;
     private Color4f lightColor;
 
-    private boolean lightActive = false;
     private long saveTime;
+    private boolean saving = false;
 
     private Sound sound;
 
@@ -37,27 +37,32 @@ public class BlockSave extends Block {
     }
 
     protected void onCollide(Entity entity) {
-        if(entity instanceof Player && Game.game.input.saveDown && !Game.game.input.saveWasDown) {
+        if(entity instanceof Player && Game.game.input.keyHit("save")) {
             save();
-            sound.play(0.1);
+            callEvents("onSave");
+            saving = true;
+            sound.play(0.2);
         }
     }
 
     public void save() {
-        Level.getCurrentLevel().spawn.setEqual(Game.screen.getPlayer().position);
+        Level.getCurrentLevel().spawn.setEqual(Game.screen.getPlayer().getPos().subtract(Game.screen.getPlayer()
+                .velocity)); // Subtract velocity to keep player from saving inside blocks
         sprite = savedSprite;
-        if(!lightActive) {
+        if(!saving) {
             frameCount = 0;
-            light = new RadialLight(new Vec2d(position.x + width / 2, position.y + height / 2 + 4),
+            light = new RadialLight(new Vec2d(getXPos() + width / 2, getYPos() + height / 2 + 4),
                     50, lightColor, Level.getCurrentLevel().ambientColor);
             Level.getCurrentLevel().lights.add(light);
-            lightActive = true;
+            saving = true;
             saveTime = System.currentTimeMillis();
         }
     }
 
     public void update() {
-        if(sprite == savedSprite) {
+        super.update();
+        if(saving) {
+            light.position.setEqual(getXPos() + width / 2, getYPos() + height / 2 + 4);
             frameCount++;
             if(frameCount < 10) {
                 light.color.a += 0.03 * lightIntensity;
@@ -70,10 +75,24 @@ public class BlockSave extends Block {
             if(frameCount > 50) {
                 sprite = normalSprite;
                 frameCount = 0;
+                saving = false;
                 Level.getCurrentLevel().lights.remove(light);
-                lightActive = false;
             }
         }
+    }
+
+    public void respawn() {
+        super.respawn();
+        if(saving) {
+            Level.getCurrentLevel().lights.remove(light);
+            saving = false;
+            sprite = normalSprite;
+            frameCount = 0;
+        }
+    }
+
+    public boolean isSaving() {
+        return saving;
     }
 
     public static class Builder extends Block.Builder {

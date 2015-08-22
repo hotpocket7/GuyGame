@@ -13,12 +13,15 @@ import game.graphics.Sprite;
 import game.math.Vec2d;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class Entity {
 
-
-    public Vec2d position, velocity, acceleration;
+    private Vec2d position;
+    public Vec2d velocity, acceleration;
     public int width, height;
+    public boolean flippedHorizontal, flippedVertical;
 
     protected Sprite sprite;
     protected Animation animation;
@@ -33,6 +36,8 @@ public abstract class Entity {
     private boolean collidable = false;
     private boolean collider = false;
 
+    private boolean updateOffScreen = false;
+
     private boolean initiallyActive = true;
     private Vec2d initialPosition, initialVelocity;
 
@@ -41,6 +46,7 @@ public abstract class Entity {
     private ArrayList<EntityEvent> updateEvents = new ArrayList<>();
     private ArrayList<CollisionEvent> collisionEvents = new ArrayList<>();
     private ArrayList<TimedEntityEvent> timedEvents = new ArrayList<>();
+    private Map<String, ArrayList<EntityEvent>> events = new HashMap<>();
 
     {
         position = new Vec2d();
@@ -52,10 +58,10 @@ public abstract class Entity {
 
     protected Entity(Builder builder) {
         position.setEqual(builder.position);
-        initialPosition.setEqual(builder.initialPosition);
+        initialPosition.setEqual(builder.position);
 
         velocity.setEqual(builder.velocity);
-        initialVelocity.setEqual(builder.initialVelocity);
+        initialVelocity.setEqual(builder.velocity);
 
         width = builder.width;
         height = builder.height;
@@ -65,6 +71,8 @@ public abstract class Entity {
 
         collider = builder.collider;
         collidable = builder.collidable;
+
+        updateOffScreen = builder.updateOffScreen;
 
         sprite = builder.sprite;
         animation = builder.animation;
@@ -81,22 +89,16 @@ public abstract class Entity {
         timedEvents.forEach(e -> e.activate(this));
 
         velocity.plusEquals(acceleration);
-        position.plusEquals(velocity);
-
-        hitbox.position.plusEquals(velocity);
-        hitbox.updateBounds();
-
-        if (polygonHitbox != null)
-            polygonHitbox.updateBounds(velocity);
+        addToPos(velocity);
     }
 
-    public void render(boolean flipHorizontal, boolean flipVertical, GL2 gl) {
+    public void render(GL2 gl) {
         updateSprite();
         if(sprite == null) {
             System.out.println("Null sprite at position " + position.toString());
             return;
         }
-        sprite.render(position, flipHorizontal, flipVertical, gl);
+        sprite.render(position, flippedHorizontal, flippedVertical, gl);
     }
 
     protected void updateSprite() {
@@ -110,8 +112,10 @@ public abstract class Entity {
         if (hitbox.collides(entity.getHitbox())) {
             if (entity.getPolygonHitbox() != null) {
                 if (polygonHitbox != null) {
-                    if (polygonHitbox.collides(entity.getPolygonHitbox()))
+                    if (polygonHitbox.collides(entity.getPolygonHitbox())) {
+                        System.out.println("DED" + (System.currentTimeMillis() % 1000));
                         return true;
+                    }
                 } else if (hitbox.collides(entity.getPolygonHitbox())) {
                     return true;
                 }
@@ -133,13 +137,9 @@ public abstract class Entity {
 
         active = initiallyActive;
 
-        Vec2d delta = initialPosition.subtract(position);
-        hitbox.position.setEqual(initialPosition);
-        if (polygonHitbox != null)
-            polygonHitbox.updateBounds(delta);
-
-        position.setEqual(initialPosition);
+        setPos(initialPosition);
         velocity.setEqual(initialVelocity);
+        acceleration.setEqual(0, 0);
 
         timedEvents.forEach(TimedEntityEvent::restart);
     }
@@ -184,8 +184,20 @@ public abstract class Entity {
         });
     }
 
+    public void addEvent(String eventType, EntityEvent event) {
+        if(!events.containsKey(eventType)) {
+            events.put(eventType, new ArrayList<>());
+        }
+        events.get(eventType).add(event);
+    }
+
+    public void callEvents(String eventType) {
+        if(events.containsKey(eventType))
+            events.get(eventType).forEach(e -> e.activate(this));
+    }
+
     //Setters
-    public void setPosition(double x, double y) {
+    public void setPos(double x, double y) {
         if (x == position.x && y == position.y) return;
 
         double deltaX = x - position.x;
@@ -199,8 +211,40 @@ public abstract class Entity {
             polygonHitbox.updateBounds(deltaX, deltaY);
     }
 
-    public void setPosition(Vec2d position) {
-        setPosition(position.x, position.y);
+    public void setPos(Vec2d position) {
+        setPos(position.x, position.y);
+    }
+
+    public void setXPos(double x) {
+        setPos(x, position.y);
+    }
+
+    public void setYPos(double y) {
+        setPos(position.x, y);
+    }
+
+    public void addToPos(Vec2d delta) {
+        setPos(position.add(delta));
+    }
+
+    public void addToPos(double dx, double dy) {
+        addToPos(new Vec2d(dx, dy));
+    }
+
+    public void subtractFromPos(Vec2d delta) {
+        addToPos(-delta.x, -delta.y);
+    }
+
+    public void subtractFromPos(double x, double y) {
+        addToPos(-x, -y);
+    }
+
+    public void setVel(Vec2d vel) {
+        velocity.setEqual(vel);
+    }
+
+    public void setVel(double xVel, double yVel) {
+        setVel(new Vec2d(xVel, yVel));
     }
 
     public void updateBounds() {
@@ -212,11 +256,11 @@ public abstract class Entity {
     }
 
     public void addToPosition(Vec2d delta) {
-        setPosition(position.add(delta));
+        setPos(position.add(delta));
     }
 
     public void addToPosition(double dx, double dy) {
-        setPosition(position.x + dx, position.y + dy);
+        setPos(position.x + dx, position.y + dy);
     }
 
     public void destroy() {
@@ -259,12 +303,69 @@ public abstract class Entity {
         Vec2d camera = Game.screen.getCamera();
         int w = Game.WIDTH;
         int h = Game.HEIGHT;
-        return position.x + width > camera.x && position.y + height > camera.y
-                && position.x < camera.x + w && position.y < camera.y + h;
+        return position.x + width > camera.x - 32 && position.y + height > camera.y - 32
+                && position.x < camera.x + 32 + w && position.y < camera.y + h + 32;
+    }
+
+    public boolean updateOffScreen() {
+        return updateOffScreen;
     }
 
     public Sprite getSprite() {
         return sprite;
+    }
+
+    public Vec2d getPos() {
+        return new Vec2d(position);
+    }
+
+    public double getXPos() {
+        return position.x;
+    }
+
+    public double getYPos() {
+        return position.y;
+    }
+
+    public Vec2d getVel() {
+        return new Vec2d(velocity);
+    }
+
+    public double getXVel() {
+        return velocity.x;
+    }
+
+    public double getYVel() {
+        return velocity.y;
+    }
+
+    public double getXAccel() {
+        return acceleration.x;
+    }
+
+    public double getYAccel() {
+        return acceleration.y;
+    }
+
+    public Vec2d getAccel() {
+        return new Vec2d(acceleration);
+    }
+
+    public void setAccel(Vec2d accel) {
+        this.acceleration.setEqual(accel);
+    }
+
+    public void setAccel(double x, double y) {
+        setXAccel(x);
+        setYAccel(y);
+    }
+
+    public void setXAccel(double x) {
+        acceleration.x = x;
+    }
+
+    public void setYAccel(double y) {
+        acceleration.y = y;
     }
 
     public static abstract class Builder {
@@ -281,6 +382,8 @@ public abstract class Entity {
 
         protected boolean collidable = false;
         protected boolean collider = false;
+
+        protected boolean updateOffScreen;
 
         protected ArrayList<EntityEvent> updateEvents = new ArrayList<>();
         protected ArrayList<TimedEntityEvent> timedEvents = new ArrayList<>();
@@ -353,6 +456,11 @@ public abstract class Entity {
 
         public Builder collider(boolean collider) {
             this.collider = collider;
+            return this;
+        }
+
+        public Builder updateOffScreen(boolean updateOffScreen) {
+            this.updateOffScreen = updateOffScreen;
             return this;
         }
 

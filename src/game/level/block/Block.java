@@ -23,7 +23,7 @@ public abstract class Block extends Entity {
     }
 
     public void render(GL2 gl) {
-        super.render(false, false, gl);
+        super.render(gl);
     }
 
     public void update() {

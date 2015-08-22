@@ -19,6 +19,8 @@ import static java.lang.Math.signum;
 public class SpriteSheet {
 
     public static SpriteSheet playerIdle, playerRun, playerJump, playerFall;
+    public static SpriteSheet boss0;
+
     public static SpriteSheet tileSet1, tileSet2;
     public static SpriteSheet pickupSheet;
     public static SpriteSheet levelBG1, levelBG2;
@@ -39,6 +41,9 @@ public class SpriteSheet {
         playerRun = new SpriteSheet("/sprites/kid/run.png", 32, 32);
         playerJump = new SpriteSheet("/sprites/kid/jump.png", 32, 32);
         playerFall = new SpriteSheet("/sprites/kid/fall.png", 32, 32);
+
+        // Boss 0
+        boss0 = new SpriteSheet("/sprites/boss0.png", 154, 116);
 
         levelBG1 = new SpriteSheet("/backgrounds/bg1.png", 800, 608);
         levelBG2 = new SpriteSheet("/backgrounds/bg2.png", 800, 608);

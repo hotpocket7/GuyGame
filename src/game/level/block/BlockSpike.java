@@ -23,24 +23,24 @@ public class BlockSpike extends Block {
         Vec2d vert3 = new Vec2d();
         switch(direction) {
             case UP:
-                vert1.setEqual(position.x + width/2, position.y);
-                vert2.setEqual(position.x, position.y + height);
-                vert3.setEqual(position.x + width, position.y + height);
+                vert1.setEqual(getXPos() + width/2, getYPos());
+                vert2.setEqual(getXPos(), getYPos() + height);
+                vert3.setEqual(getXPos() + width, getYPos() + height);
                 break;
             case RIGHT:
-                vert1.setEqual(position.x, position.y);
-                vert2.setEqual(position.x + width, position.y + height/2);
-                vert3.setEqual(position.x, position.y + height);
+                vert1.setEqual(getXPos(), getYPos());
+                vert2.setEqual(getXPos() + width, getYPos() + height/2);
+                vert3.setEqual(getXPos(), getYPos() + height);
                 break;
             case DOWN:
-                vert1.setEqual(position.x, position.y);
-                vert2.setEqual(position.x + width, position.y);
-                vert3.setEqual(position.x + width/2, position.y + height);
+                vert1.setEqual(getXPos(), getYPos());
+                vert2.setEqual(getXPos() + width, getYPos());
+                vert3.setEqual(getXPos() + width/2, getYPos() + height);
                 break;
             case LEFT:
-                vert1.setEqual(position.x + width, position.y);
-                vert2.setEqual(position.x + width, position.y + height);
-                vert3.setEqual(position.x, position.y + height/2);
+                vert1.setEqual(getXPos() + width, getYPos());
+                vert2.setEqual(getXPos() + width, getYPos() + height);
+                vert3.setEqual(getXPos(), getYPos() + height/2);
                 break;
         }
 

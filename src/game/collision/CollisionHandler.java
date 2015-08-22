@@ -18,17 +18,12 @@ public final class CollisionHandler {
         RectangularHitbox entityHitbox = entity.getHitbox();
         RectangularHitbox blockHitbox  = block.getHitbox();
 
-        Rectangle2D intersection = entityHitbox.bounds.createIntersection(blockHitbox.bounds);
-
-//      if(intersection.getWidth() >= intersection.getHeight()
-//              || block.position.y > entity.position.subtract(entity.velocity).y + entity.height)
-//          return; // No horizontal collision
         if(entityHitbox.position.x < blockHitbox.position.x && block.solidLeft) {
             // Collision to right of entity
-            entity.position.x = blockHitbox.position.x - entity.width;
+            entity.setXPos(blockHitbox.position.x - entity.width);
         } else if(block.solidRight) {
             // Collision to left of entity
-            entity.position.x = blockHitbox.position.x + blockHitbox.width;
+            entity.setXPos(blockHitbox.position.x + blockHitbox.width);
         } else return;
 
         entity.updateBounds();
@@ -44,17 +39,16 @@ public final class CollisionHandler {
         RectangularHitbox entityHitbox = entity.getHitbox();
         RectangularHitbox blockHitbox  = block.getHitbox();
 
-
         if(entityHitbox.position.y > blockHitbox.position.y && block.solidBottom) {
             // Collision above entity
-            entity.position.y = blockHitbox.position.y + blockHitbox.height;
+            entity.setYPos(blockHitbox.position.y + blockHitbox.height);
             entity.velocity.y = 0;
         } else if(block.solidTop
-                && entity.position.y + entity.height -1- (entity.velocity.y - entity.acceleration.y)
-                   < block.position.y - (block.velocity.y - block.acceleration.y)) {
+                && entity.getYPos() + entity.height -1- (entity.velocity.y - entity.acceleration.y)
+                   < block.getYPos() - (block.velocity.y - block.acceleration.y)) {
             // Collision below entity
-            entity.position.y = blockHitbox.position.y - entity.height;
-            entity.position.plusEquals(block.velocity);
+            entity.setYPos(blockHitbox.position.y - entity.height);
+            entity.addToPos(block.velocity);
             entity.velocity.y = 0;
             if(entity instanceof Player) {
                 ((Player) entity).state = Player.State.GROUNDED;

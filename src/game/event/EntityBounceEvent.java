@@ -13,16 +13,19 @@ public class EntityBounceEvent implements EntityEvent {
     }
 
     public void activate(Entity entity) {
-        Vec2d position = entity.position;
+        Vec2d position = entity.getPos();
         Vec2d velocity = entity.velocity;
 
         if(max.x != min.x && (position.x > max.x || position.x < min.x)) {
             velocity.x *= -1;
             position.x = position.x > max.x ? max.x : min.x;
+            entity.updateBounds();
         }
         if(max.y != min.y && (position.y + 32 > max.y || position.y + 32 < min.y)){
             velocity.y *= -1;
             position.y = position.y + 32 > max.y ? max.y - 32: min.y - 32;
+            entity.updateBounds();
         }
+
     }
 }
