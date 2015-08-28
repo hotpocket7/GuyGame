@@ -8,8 +8,10 @@ import java.util.Arrays;
 public class Animation {
 
     public static Animation playerIdle, playerRun, playerJump, playerFall;
-    public static Animation boss0Idle, boss0Moving;
     public static Animation torch;
+
+    public static Animation boss0Idle, boss0Moving;
+    public static Animation fireProjectile;
 
     static {
         playerIdle = new Animation(Sprite.playerIdle, 10);
@@ -19,6 +21,8 @@ public class Animation {
 
         boss0Idle = new Animation(Sprite.boss0Idle, 5);
         boss0Moving = new Animation(Sprite.boss0Moving, 5);
+
+        fireProjectile = new Animation(Sprite.fireProjectile, 10);
 
         torch = new Animation(Sprite.torch, 10);
     }

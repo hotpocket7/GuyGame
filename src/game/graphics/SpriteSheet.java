@@ -19,12 +19,14 @@ import static java.lang.Math.signum;
 public class SpriteSheet {
 
     public static SpriteSheet playerIdle, playerRun, playerJump, playerFall;
-    public static SpriteSheet boss0;
 
     public static SpriteSheet tileSet1, tileSet2;
     public static SpriteSheet pickupSheet;
     public static SpriteSheet levelBG1, levelBG2;
     public static SpriteSheet menuBG, menuTitle;
+
+    public static SpriteSheet boss0;
+    public static SpriteSheet fireProjectile;
 
     public static SpriteSheet lastSheet;
 
@@ -44,6 +46,9 @@ public class SpriteSheet {
 
         // Boss 0
         boss0 = new SpriteSheet("/sprites/boss0.png", 154, 116);
+
+        // Projectiles
+        fireProjectile = new SpriteSheet("/sprites/fire.png", 24, 48);
 
         levelBG1 = new SpriteSheet("/backgrounds/bg1.png", 800, 608);
         levelBG2 = new SpriteSheet("/backgrounds/bg2.png", 800, 608);
@@ -69,69 +74,6 @@ public class SpriteSheet {
         numSprites = numSpritesX * numSpritesY;
     }
 
-    public void renderSprite(int index, Vec2d position, Vec2d offset,
-                             int offsetWidth, int offsetHeight,
-                             boolean flipHorizontal, boolean flipVertical, GL2 gl) {
-        float x = (float) position.x;
-        float y = (float) position.y;
-
-        y = Game.HEIGHT - y - spriteHeight; //Origin in-game is top-left rather than bottom-left
-        float xx = (index % numSpritesX) * (float) spriteWidth / width;
-        float yy = (float) Math.floor(index / numSpritesX) * (float) spriteHeight / height;
-
-        Vec2d finalOffset = new Vec2d(offset.x, offset.y);
-
-        if (flipHorizontal)
-            finalOffset.x = signum(offset.x) * (abs(offsetWidth) - abs(offset.x));
-        if (flipVertical)
-            finalOffset.y = signum(offset.y) * (abs(offsetHeight) - abs(offset.y));
-
-        x += finalOffset.x;
-        y += finalOffset.y;
-
-//      if(flipHorizontal) System.out.println("New offset: " + offset.toString());
-
-        gl.glEnable(GL2.GL_BLEND);
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
-
-        gl.glEnable(GL2.GL_TEXTURE_2D);
-
-        if(lastSheet != this) {
-            texture.enable(gl);
-            texture.bind(gl);
-            lastSheet = this;
-        }
-
-        float x1 = flipHorizontal ? x + spriteWidth : x;
-        float y1 = flipVertical ? y + spriteHeight : y;
-        float x2 = flipHorizontal ? x : x + spriteWidth;
-        float y2 = flipVertical ? y : y + spriteHeight;
-
-        gl.glBegin(GL2.GL_QUADS);
-        gl.glColor4f(1, 1, 1, 1);
-
-        gl.glTexCoord2f(xx, yy + (float) spriteHeight / height);
-        gl.glVertex2f(x1, y1);
-
-        gl.glTexCoord2f(xx, yy);
-        gl.glVertex2f(x1, y2);
-
-        gl.glTexCoord2f(xx + (float) spriteWidth / width, yy);
-        gl.glVertex2f(x2, y2);
-
-        gl.glTexCoord2f(xx + (float) spriteWidth / width, yy + (float) spriteHeight / height);
-        gl.glVertex2f(x2, y1);
-
-        gl.glEnd();
-        gl.glDisable(GL2.GL_TEXTURE_2D);
-        gl.glDisable(GL2.GL_BLEND);
-    }
-
-    public void render(Vec2d position, GL2 gl) {
-        renderSprite(0, position, new Vec2d(), 0, 0, false, false, gl);
-    }
-
-
     private void load() {
         try {
             image = new File("aksdfjadlsfjasdhfjklasdhk"); //Need something to copy the image to
@@ -156,11 +98,19 @@ public class SpriteSheet {
     }
 
     public Sprite[] split() {
-        return split(0, numSprites - 1);
+        return split(0, Math.max(0, numSprites - 1));
     }
 
     public int getNumSprites() {
         return numSprites;
+    }
+
+    public int getNumSpritesX() {
+        return numSpritesX;
+    }
+
+    public int getNumSpritesY() {
+        return numSpritesY;
     }
 
     public int getWidth() {
@@ -169,6 +119,14 @@ public class SpriteSheet {
 
     public int getHeight() {
         return height;
+    }
+
+    public int getSpriteWidth() {
+        return spriteWidth;
+    }
+
+    public int getSpriteHeight() {
+        return spriteHeight;
     }
 
     public Texture getTexture() {

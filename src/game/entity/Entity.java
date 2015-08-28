@@ -16,7 +16,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class Entity {
+public class Entity {
+
+    private int timer;
 
     private Vec2d position;
     public Vec2d velocity, acceleration;
@@ -25,6 +27,7 @@ public abstract class Entity {
 
     protected Sprite sprite;
     protected Animation animation;
+    protected double alpha = 1;
 
     protected RectangularHitbox hitbox;
     protected PolygonHitbox polygonHitbox = null;
@@ -32,6 +35,7 @@ public abstract class Entity {
     public boolean active = true;
     private boolean temporary = false;
     private boolean destroyed = false;
+    protected boolean dying = false;
 
     private boolean collidable = false;
     private boolean collider = false;
@@ -63,6 +67,8 @@ public abstract class Entity {
         velocity.setEqual(builder.velocity);
         initialVelocity.setEqual(builder.velocity);
 
+        acceleration.setEqual(builder.acceleration);
+
         width = builder.width;
         height = builder.height;
 
@@ -82,6 +88,7 @@ public abstract class Entity {
         updateEvents = builder.updateEvents;
         timedEvents = builder.timedEvents;
         collisionEvents = builder.collisionEvents;
+        timer++;
     }
 
     public void update() {
@@ -98,7 +105,7 @@ public abstract class Entity {
             System.out.println("Null sprite at position " + position.toString());
             return;
         }
-        sprite.render(position, flippedHorizontal, flippedVertical, gl);
+        sprite.render(position, flippedHorizontal, flippedVertical, alpha, gl);
     }
 
     protected void updateSprite() {
@@ -136,6 +143,7 @@ public abstract class Entity {
         }
 
         active = initiallyActive;
+        dying = false;
 
         setPos(initialPosition);
         velocity.setEqual(initialVelocity);
@@ -150,6 +158,16 @@ public abstract class Entity {
             return;
         }
         updateEvents.add(e);
+    }
+
+    public void removeUpdateEvent(EntityEvent e) {
+        if (e instanceof TimedEntityEvent) {
+            if(timedEvents.contains(e))
+                timedEvents.remove(e);
+            return;
+        }
+        if(updateEvents.contains(e))
+            updateEvents.remove(e);
     }
 
     public void addCollisionEvent(CollisionEvent e) {
@@ -176,12 +194,22 @@ public abstract class Entity {
 //                  collide(entity);
 //          }
 //      }
-        entities.stream().filter(e -> e.active && e != this && e.isOnScreen() && e.isCollidable() && collides(e))
-                .forEach(entity
-                ->{
-            entity.collide(this);
-            if(!entity.isCollider()) collide(entity);
-        });
+
+        for(Entity entity : entities) {
+            if(entity.active && entity != this && entity.isOnScreen() && entity.isCollidable()) {
+                if(collides(entity)) {
+                    entity.collide(this);
+                    if(!entity.isCollider())
+                        collide(entity);
+                }
+            }
+        }
+//      entities.stream().filter(e -> e.active && e != this && e.isOnScreen() && e.isCollidable() && collides(e))
+//              .forEach(entity
+//              ->{
+//          entity.collide(this);
+//          if(!entity.isCollider()) collide(entity);
+//      });
     }
 
     public void addEvent(String eventType, EntityEvent event) {
@@ -339,16 +367,8 @@ public abstract class Entity {
         return velocity.y;
     }
 
-    public double getXAccel() {
-        return acceleration.x;
-    }
-
-    public double getYAccel() {
-        return acceleration.y;
-    }
-
-    public Vec2d getAccel() {
-        return new Vec2d(acceleration);
+    protected int getTimer() {
+        return timer;
     }
 
     public void setAccel(Vec2d accel) {
@@ -368,9 +388,10 @@ public abstract class Entity {
         acceleration.y = y;
     }
 
-    public static abstract class Builder {
 
-        protected Vec2d position = new Vec2d(), velocity = new Vec2d();
+    public static class Builder {
+
+        protected Vec2d position = new Vec2d(), velocity = new Vec2d(), acceleration = new Vec2d();
         protected Vec2d initialPosition = new Vec2d(), initialVelocity = new Vec2d();
 
         protected int width, height;
@@ -410,6 +431,11 @@ public abstract class Entity {
         public Builder velocity(double x, double y) {
             velocity.setEqual(x, y);
             initialVelocity.setEqual(x, y);
+            return this;
+        }
+
+        public Builder acceleration(double x, double y) {
+            acceleration.setEqual(x, y);
             return this;
         }
 
@@ -464,12 +490,14 @@ public abstract class Entity {
             return this;
         }
 
-        public Builder addUpdateEvent(EntityEvent event) {
-            if (event instanceof TimedEntityEvent) {
-                timedEvents.add((TimedEntityEvent) event);
-                return this;
+        public Builder addUpdateEvents(EntityEvent... events) {
+            for(EntityEvent event : events) {
+                if (event instanceof TimedEntityEvent) {
+                    timedEvents.add((TimedEntityEvent) event);
+                    continue;
+                }
+                updateEvents.add(event);
             }
-            updateEvents.add(event);
             return this;
         }
 
@@ -478,7 +506,9 @@ public abstract class Entity {
             return this;
         }
 
-        public abstract Entity build();
+        public Entity build() {
+            return new Entity(this);
+        }
     }
 }
 

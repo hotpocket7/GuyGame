@@ -11,8 +11,8 @@ public abstract class Pickup extends Entity {
     }
 
     protected void onCollide(Entity entity) {
-        if((entity instanceof Player))
-            active = false;
+        if((entity instanceof Player) && !dying)
+            dying = true;
     }
 
 }

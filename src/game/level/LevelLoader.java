@@ -60,7 +60,7 @@ public class LevelLoader {
                 double xMax = properties.has("xMax") ? properties.getDouble("xMax") : 0;
                 double yMin = properties.has("yMin") ? properties.getDouble("yMin") : 0;
                 double yMax = properties.has("yMax") ? properties.getDouble("yMax") : 0;
-                builder.addUpdateEvent(new EntityBounceEvent(
+                builder.addUpdateEvents(new EntityBounceEvent(
                         new Vec2d(xMax, yMax),
                         new Vec2d(xMin, yMin)
                 ));
@@ -182,16 +182,16 @@ public class LevelLoader {
                             builder = new BlockGeneric.Builder().solid(false)
                                     .position(position).size(16, 16).sprite(sprite);
                             int delay = properties.getInt("delay");
-                            builder.addUpdateEvent(new TimedEntityEvent(
+                            builder.addUpdateEvents(new TimedEntityEvent(
                                     delay,
                                     (b) -> {
                                         Entity.Builder builder1 = new JumpPickup.Builder()
                                                 .position(position.add(b.width, -Math.abs(b.height - JumpPickup.DEFAULT_HEIGHT) / 2f))
                                                 .velocity(2, 0)
-                                                .sprite(new Sprite(SpriteSheet.pickupSheet, 1, -8, 8, JumpPickup.DEFAULT_WIDTH, JumpPickup.DEFAULT_HEIGHT))
+                                                .sprite(Sprite.jumpPickup)
                                                 .temporary(true)
                                                 .collider(true)
-                                                .addUpdateEvent(Events.destroyOnLeaveScreen).updateOffScreen(true)
+                                                .addUpdateEvents(Events.destroyOnLeaveScreen).updateOffScreen(true)
                                                 .addCollisionEvent(Events.destroyOnTouchBlock);
                                         Level.getCurrentLevel().addEntity(builder1.build());
                                     }
@@ -202,16 +202,16 @@ public class LevelLoader {
                             builder = new BlockGeneric.Builder().solid(false)
                                     .position(position).size(16, 16).sprite(sprite);
                             int delay = properties.getInt("delay");
-                            builder.addUpdateEvent(new TimedEntityEvent(
+                            builder.addUpdateEvents(new TimedEntityEvent(
                                     delay,
                                     (b) -> {
                                         Entity.Builder builder1 = new JumpPickup.Builder()
                                                 .position(position.add(16 - b.width, -Math.abs(b.height - JumpPickup.DEFAULT_HEIGHT) / 2f))
                                                 .velocity(-2, 0)
-                                                .sprite(new Sprite(SpriteSheet.pickupSheet, 1, -8, 8, JumpPickup.DEFAULT_WIDTH, JumpPickup.DEFAULT_HEIGHT))
+                                                .sprite(Sprite.jumpPickup)
                                                 .temporary(true)
                                                 .collider(true)
-                                                .addUpdateEvent(Events.destroyOnLeaveScreen).updateOffScreen(true)
+                                                .addUpdateEvents(Events.destroyOnLeaveScreen).updateOffScreen(true)
                                                 .addCollisionEvent(Events.destroyOnTouchBlock);
                                         Level.getCurrentLevel().addEntity(builder1.build());
                                     }
@@ -237,16 +237,16 @@ public class LevelLoader {
                         case 23: {
                             builder = new BlockGeneric.Builder().position(position).size(16, 16).sprite(sprite);
                             int delay = properties.getInt("delay");
-                            builder.addUpdateEvent(new TimedEntityEvent(
+                            builder.addUpdateEvents(new TimedEntityEvent(
                                     delay,
                                     (b) -> {
                                         Entity.Builder builder1 = new JumpPickup.Builder()
                                                 .position(position.add(-1, 16))
                                                 .velocity(0, 2)
-                                                .sprite(new Sprite(SpriteSheet.pickupSheet, 1, -8, 8, JumpPickup.DEFAULT_WIDTH, JumpPickup.DEFAULT_HEIGHT))
+                                                .sprite(Sprite.jumpPickup)
                                                 .temporary(true)
                                                 .collider(true)
-                                                .addUpdateEvent(Events.destroyOnLeaveScreen).updateOffScreen(true)
+                                                .addUpdateEvents(Events.destroyOnLeaveScreen).updateOffScreen(true)
                                                 .addCollisionEvent(Events.destroyOnTouchBlock);
                                         Level.getCurrentLevel().addEntity(builder1.build());
                                     }
@@ -273,16 +273,16 @@ public class LevelLoader {
                         case 31: {
                             builder = new BlockGeneric.Builder().position(position).size(16, 16).sprite(sprite);
                             int delay = properties.getInt("delay");
-                            builder.addUpdateEvent(new TimedEntityEvent(
+                            builder.addUpdateEvents(new TimedEntityEvent(
                                     delay,
                                     (b) -> {
                                         Entity.Builder builder1 = new JumpPickup.Builder()
                                                 .position(position.add(-1, -JumpPickup.DEFAULT_HEIGHT))
                                                 .velocity(0, -2)
-                                                .sprite(new Sprite(SpriteSheet.pickupSheet, 1, -8, 8, JumpPickup.DEFAULT_WIDTH, JumpPickup.DEFAULT_HEIGHT))
+                                                .sprite(Sprite.jumpPickup)
                                                 .temporary(true)
                                                 .collider(true)
-                                                .addUpdateEvent(Events.destroyOnLeaveScreen).updateOffScreen(true)
+                                                .addUpdateEvents(Events.destroyOnLeaveScreen).updateOffScreen(true)
                                                 .addCollisionEvent(Events.destroyOnTouchBlock);
                                         Level.getCurrentLevel().addEntity(builder1.build());
                                     }
@@ -318,7 +318,7 @@ public class LevelLoader {
             } else if (type.equals("pickup")) {
                 switch (id) {
                     case 1:
-                        sprite = new Sprite(tileSet, id, -8, 8, 18, 18);
+                        sprite = Sprite.jumpPickup;
                         builder = new JumpPickup.Builder().position(position.add(8, 8)).sprite(sprite);
                         break;
                     default:

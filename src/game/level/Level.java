@@ -27,12 +27,13 @@ public class Level {
     public ArrayList<Block> blocks = new ArrayList<>();
     public ArrayList<Light> lights = new ArrayList<>();
     public ArrayList<Entity> entities = new ArrayList<>();
+    public ArrayList<Entity> addedEntities = new ArrayList<>();
 
     public HashMap<String, Entity> entityMap = new HashMap<>();
 
     public Vec2d spawn = new Vec2d();
 
-    private SpriteSheet background;
+    private Sprite background;
 
     public Song song;
 
@@ -40,11 +41,11 @@ public class Level {
     private int lightBlendFunc;
 
     static {
-        hubLevel = new Level("/maps/hub.json", SpriteSheet.levelBG1, new Color4f(0x1b/255f, 0x1b/255f, 0x25/255f, 1),
+        hubLevel = new Level("/maps/hub.json", Sprite.levelBG1, new Color4f(0x1b/255f, 0x1b/255f, 0x25/255f, 1),
                    Song.hubSong);
         hubLevel.setLightBlendFunc(1);
 
-        jumpLevel = new Level("/maps/jump.json", SpriteSheet.levelBG2, new Color4f(.8f, .8f, .8f, 1),
+        jumpLevel = new Level("/maps/jump.json", Sprite.levelBG2, new Color4f(.8f, .8f, .8f, 1),
                 Song.jumpAreaSong) {
             public void create() {
                 BlockSave bossSave = (BlockSave) entityMap.get("bossSave");
@@ -54,7 +55,8 @@ public class Level {
                     song.pause();
                     Song.boss1.stop();
                     Song.boss1.play(true, Song.boss1.getMaxVolume());
-                    addEntity(new BossRobotnik.Builder().position(5888, 1440).build());
+                    addEntity(new BossRobotnik.Builder().position((6368 + 5600)/2 - BossRobotnik.WIDTH/2, 1088)
+                                    .build());
                 });
             }
         };
@@ -65,7 +67,7 @@ public class Level {
 
     public int width, height; // in pixels
 
-    public Level(String path, SpriteSheet background, Color4f ambientColor, Song song){
+    public Level(String path, Sprite background, Color4f ambientColor, Song song){
         this.ambientColor.setEqual(ambientColor);
         this.background = background;
         try {
@@ -90,13 +92,20 @@ public class Level {
     public void update() {
         blocks.stream().filter(block -> block.active && (block.isOnScreen() || block.updateOffScreen()))
                 .forEach(Block::update);
+        addedEntities.forEach(this::addEntityFromQueue);
+        addedEntities.clear();
+
         entities.stream().filter(entity -> entity.active && (entity.isOnScreen() || entity.updateOffScreen()))
                 .forEach(Entity::update);
+        addedEntities.forEach(this::addEntityFromQueue);
+        addedEntities.clear();
 
         entities.stream().filter(e -> e.isCollider() && e.isOnScreen()).forEach(entity -> {
             entity.pollCollisions(entities);
             entity.pollCollisions(blocks);
         });
+        addedEntities.forEach(this::addEntityFromQueue);
+        addedEntities.clear();
 
         Iterator<Block> blockIterator = blocks.iterator();
         Iterator<Entity> entityIterator = entities.iterator();
@@ -120,7 +129,7 @@ public class Level {
         gl.glLoadIdentity();
         gl.glTranslated(-camera.x, camera.y, 0);
 
-        background.renderSprite(0, camera, new Vec2d(0, 0), 0, 0, false, false, gl);
+        background.render(camera, false, false, gl);
 
         blocks.stream().filter(b -> b.active && b.isOnScreen()).forEach(b -> b.render(gl));
         entities.stream().filter(e -> e.active && !e.renderInFront && e.isOnScreen()).forEach(e -> e.render(gl));
@@ -217,7 +226,7 @@ public class Level {
         song.setVolume(song.getMaxVolume());
     }
 
-    public void addEntity(Entity entity) {
+    private void addEntityFromQueue(Entity entity) {
         if(entity instanceof Block) {
             blocks.add((Block) entity);
             return;
@@ -230,6 +239,9 @@ public class Level {
 //      }
     }
 
+    public void addEntity(Entity entity) {
+        addedEntities.add(entity);
+    }
 
     public void removeEntity(Entity entity) {
         if(blocks.contains(entity))

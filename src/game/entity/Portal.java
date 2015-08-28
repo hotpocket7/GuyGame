@@ -31,7 +31,7 @@ public class Portal extends Entity {
         renderInFront = true;
     }
 
-    public void render(boolean flipH, boolean flipV, GL2 gl) {
+    public void render(GL2 gl) {
         if(Level.levels.size() + 1 > destinationID) {
             destination = Level.levels.get(destinationID);
         }

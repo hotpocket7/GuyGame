@@ -193,7 +193,7 @@ public class Player extends Entity {
 
     public static class Builder extends Entity.Builder {
         {
-            size(11, 19);
+            size(11, 21);
         }
         public Entity build() {
             return new Player(this);
