@@ -22,6 +22,7 @@ public class Entity {
 
     private Vec2d position;
     public Vec2d velocity, acceleration;
+    public double rotation = 0;
     public int width, height;
     public boolean flippedHorizontal, flippedVertical;
 
@@ -105,7 +106,7 @@ public class Entity {
             System.out.println("Null sprite at position " + position.toString());
             return;
         }
-        sprite.render(position, flippedHorizontal, flippedVertical, alpha, gl);
+        sprite.render(position, flippedHorizontal, flippedVertical, alpha, rotation, gl);
     }
 
     protected void updateSprite() {

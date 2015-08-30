@@ -72,6 +72,13 @@ public class Vec2d {
         return new Vec2d(x / magnitude, y / magnitude);
     }
 
+    public Vec2d rotate(Vec2d v, double angle) {
+        Vec2d temp = subtract(v);
+        double a = atan2(temp.y, temp.x);
+        double mag = temp.magnitude();
+        return v.add(mag * cos(toRadians(angle) + a), mag * sin(toRadians(angle) + a));
+    }
+
     public double magnitude() {
         return sqrt(x*x + y*y);
     }

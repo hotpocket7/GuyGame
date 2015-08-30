@@ -5,6 +5,10 @@ import game.event.Events;
 import game.graphics.Animation;
 import game.graphics.Sprite;
 import game.level.Level;
+import game.math.Vec2d;
+import game.sound.Sounds;
+
+import static java.lang.Math.*;
 
 public class BossRobotnik extends Boss {
 
@@ -32,6 +36,7 @@ public class BossRobotnik extends Boss {
         protected void step(Boss b, long t) {
             Level level = Level.getCurrentLevel();
             if(t == 0) {
+                System.out.println(new Vec2d(2, 2).rotate(new Vec2d(), 45).toString());
                 b.setAnimation(Animation.boss0Moving);
                 initialYVel = b.velocity.y;
             }
@@ -53,11 +58,15 @@ public class BossRobotnik extends Boss {
             if(t > 20 && t % 7 == 0) {
                 level.addEntity(
                         new Entity.Builder().sprite(Sprite.fireProjectile[0]).animation(Animation.fireProjectile)
-                                .position(b.getPos().add(48, 96)).velocity(random(-20, 20)/10, 3).acceleration(0, 0.5)
+                                .position(b.getPos().add(48, 96)).velocity(b.velocity.x / 4 + random(-20, 20) / 10, 3)
+                                .acceleration(0, 0.5)
                                 .size(17, 17).temporary(true)
                                 .addUpdateEvents(Events.destroyOnLeaveScreen)
-                                .addCollisionEvent(Events.killPlayerOnTouch).collidable(true).build()
+                                .addCollisionEvent(Events.killPlayerOnTouch).collidable(true)
+                                .addUpdateEvents(e -> e.rotation = toDegrees(atan2(e.velocity.x, e.velocity.y)))
+                                .build()
                 );
+                Sounds.boss1Fire.play(0.05);
             }
 
             if(b.velocity.x >= 0)

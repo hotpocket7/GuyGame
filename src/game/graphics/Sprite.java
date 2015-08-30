@@ -109,7 +109,8 @@ public class Sprite {
         this(new Builder().spriteSheet(sheet).index(index));
     }
 
-    public void render(Vec2d position, boolean flipHorizontal, boolean flipVertical, double alpha, GL2 gl) {
+    public void render(Vec2d position, boolean flipHorizontal, boolean flipVertical, double alpha, double rotation, GL2
+            gl) {
         double texWidth = spriteSheet.getSpriteWidth();
         double texHeight = spriteSheet.getSpriteHeight();
         double numSpritesX = spriteSheet.getNumSpritesX();
@@ -140,6 +141,15 @@ public class Sprite {
         Vec2d vert2 = pos.add(bounds.width, 0);
         Vec2d vert3 = pos.add(bounds.width, -bounds.height);
         Vec2d vert4 = pos.add(0, -bounds.height);
+
+        if((int) rotation % 360 != 0) {
+            Vec2d center = new Vec2d(hitbox.width/2d, -(hitbox.height/2d + hitbox.y))
+                    .add(pos);
+            vert1 = vert1.rotate(center, rotation);
+            vert2 = vert2.rotate(center, rotation);
+            vert3 = vert3.rotate(center, rotation);
+            vert4 = vert4.rotate(center, rotation);
+        }
 
         gl.glEnable(GL2.GL_BLEND);
         gl.glBlendFunc(srcBlend, dstBlend);
@@ -172,7 +182,7 @@ public class Sprite {
     }
 
     public void render(Vec2d position, boolean flipHorizontal, boolean flipVertical, GL2 gl) {
-        render(position, flipHorizontal, flipVertical, 1, gl);
+        render(position, flipHorizontal, flipVertical, 1, 0, gl);
     }
 
     private void bindSheet(GL2 gl) {

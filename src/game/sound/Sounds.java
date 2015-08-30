@@ -10,4 +10,6 @@ public final class Sounds {
     public static Sound playerDeath = TinySound.loadSound("/sound/playerDeath.wav");
 
     public static Sound pickupJumpRefresher = TinySound.loadSound("/sound/pickupJumpRefresher.wav");
+
+    public static Sound boss1Fire = TinySound.loadSound("/sound/fire.wav");
 }
